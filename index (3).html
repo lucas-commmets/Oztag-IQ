@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oztag IQ</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#b8ff57">
+</head>
+<body>
+
+<nav>
+  <span class="nav-logo" onclick="showPage('home')">OZTAG IQ</span>
+  <ul class="nav-links">
+    <li><a onclick="showPage('home')" id="nav-home" class="active">Home</a></li>
+    <li><a onclick="showPage('app')" id="nav-app">The App</a></li>
+    <li><a onclick="showPage('sideline')" id="nav-sideline">Sideline</a></li>
+    <li><a onclick="showPage('teamhub')" id="nav-teamhub">Team Hub</a></li>
+  </ul>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ADD PLAYER MODAL -->
+<div class="modal-overlay hidden" id="addPlayerModal">
+  <div class="modal">
+    <h3>ADD PLAYER</h3>
+    <input class="text-input modal-input" id="newPlayerName" placeholder="Player name..." />
+    <div class="modal-actions">
+      <button class="btn btn-secondary btn-small" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary btn-small" onclick="confirmAddPlayer()">Add Player</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ HOME ═══ -->
+<div id="home" class="page active">
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-eyebrow">Ultimate Oztag Companion</div>
+      <h1 class="hero-title">OZTAG<br><span>IQ</span></h1>
+      <p class="hero-sub">The ultimate app for your team and the field. Real-time stats, match logging, sideline scores, and team insights — all in one place.</p>
+      <div class="hero-buttons">
+        <button class="btn btn-primary" onclick="showPage('app')">Get Started</button>
+        <button class="btn btn-secondary" onclick="showPage('teamhub')">Go To Team Hub</button>
+      </div>
+      <div class="hero-pills">
+        <span class="pill">One-Tap Logging</span>
+        <span class="pill">Live Scores</span>
+        <span class="pill">Wrist Stats</span>
+        <span class="pill">Team Standings</span>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="phone-score-header"><div class="game-label" id="heroGameLabel">Live · 00:00</div></div>
+            <div class="score-row"><span class="score-team">HOME</span><span class="score-num" id="heroHome">0</span></div>
+            <div class="score-row"><span class="score-team">AWAY</span><span class="score-num" id="heroAway">0</span></div>
+            <div class="phone-stats">
+              <div class="stat-row"><span>Tries</span><span id="heroTries">0</span></div>
+              <div class="stat-row"><span>Tags</span><span id="heroTags">0</span></div>
+              <div class="stat-row"><span>Top Scorer</span><span id="heroTopScorer">—</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <footer><span class="logo">OZTAG IQ</span><span>© 2025 Oztag IQ · For teams, by players</span></footer>
+</div>
+
+<!-- ═══ THE APP ═══ -->
+<div id="app" class="page">
+  <div class="section-header">
+    <div class="section-label">Match Day</div>
+    <h2 class="section-title">LOG THE<br><span>GAME.</span></h2>
+  </div>
+  <div class="app-layout">
+    <!-- LEFT: Roster + Logger -->
+    <div style="display:flex;flex-direction:column;gap:1.5rem;">
+      <!-- Match Timer -->
+      <div class="app-panel">
+        <div class="panel-title">MATCH TIMER</div>
+        <div class="match-timer" id="matchTimer">00:00</div>
+        <div style="display:flex;justify-content:space-around;align-items:center;margin-bottom:.9rem;gap:1rem;">
+          <div style="text-align:center;">
+            <div style="font-family:var(--font-m);font-size:.6rem;letter-spacing:2px;color:#666;margin-bottom:.3rem;">HOME</div>
+            <div style="font-family:var(--font-d);font-size:2.8rem;color:var(--green);letter-spacing:2px;line-height:1;" id="homeScoreDisplay">0</div>
+          </div>
+          <div style="font-family:var(--font-d);font-size:1.8rem;color:#333;margin-top:1rem;">–</div>
+          <div style="text-align:center;">
+            <div style="font-family:var(--font-m);font-size:.6rem;letter-spacing:2px;color:#666;margin-bottom:.3rem;">AWAY</div>
+            <div style="font-family:var(--font-d);font-size:2.8rem;color:#ff7a5a;letter-spacing:2px;line-height:1;" id="awayScoreDisplay">0</div>
+            <div style="display:flex;gap:.4rem;justify-content:center;margin-top:.5rem;">
+              <button class="icon-btn" onclick="changeAwayTries(1)" style="font-size:1rem;padding:.25rem .6rem;">+</button>
+              <button class="icon-btn danger" onclick="changeAwayTries(-1)" style="font-size:1rem;padding:.25rem .6rem;">−</button>
+            </div>
+          </div>
+        </div>
+        <div class="timer-row">
+          <button class="btn btn-primary btn-small" id="timerBtn" onclick="toggleTimer()">Start</button>
+          <button class="btn btn-secondary btn-small" onclick="resetTimer()">Reset</button>
+          <button class="btn btn-secondary btn-small" onclick="resetMatch()">New Match</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-family:var(--font-m);font-size:.7rem;color:#555;margin-top:.5rem;">
+          <span id="scoreDisplay" style="color:var(--white);">Home 0 – 0 Away</span>
+          <span id="matchStatus" style="color:var(--green);">Ready</span>
+        </div>
+      </div>
+      <!-- Roster -->
+      <div class="app-panel">
+        <div class="panel-title">SQUAD ROSTER</div>
+        <div class="panel-sub">Tap a player in the logger to select them, then log their action.</div>
+        <ul class="roster-list" id="rosterList"></ul>
+        <div class="add-player-row">
+          <input class="text-input" id="quickAddInput" placeholder="Quick add player..." onkeydown="if(event.key==='Enter')quickAddPlayer()" />
+          <button class="btn btn-primary btn-small" onclick="quickAddPlayer()">Add</button>
+        </div>
+      </div>
+    </div>
+    <!-- RIGHT: Match Logger + Live Stats -->
+    <div style="display:flex;flex-direction:column;gap:1.5rem;">
+      <!-- Logger -->
+      <div class="app-panel">
+        <div class="panel-title">MATCH LOG</div>
+        <div class="panel-sub">Select a player, then tap Try or Tag.</div>
+        <div class="player-tap-grid" id="playerTapGrid"></div>
+        <div class="log-action-row" style="margin-bottom:1rem;">
+          <button class="action-btn try" id="tryBtn" onclick="logAction('try')" disabled>+ TRY</button>
+          <button class="action-btn tag" id="tagBtn" onclick="logAction('tag')" disabled>+ TAG</button>
+        </div>
+        <div class="match-log-scroll" id="matchLogScroll">
+          <div style="text-align:center;padding:2rem;color:#444;font-family:var(--font-m);font-size:.75rem;">No events yet — start the timer and log!</div>
+        </div>
+      </div>
+      <!-- Live Stats -->
+      <div class="app-panel">
+        <div class="panel-title">LIVE STATS</div>
+        <div class="stats-grid" id="liveStatsGrid">
+          <div class="stat-card"><div class="stat-val" id="statTries">0</div><div class="stat-lbl">Total Tries</div></div>
+          <div class="stat-card"><div class="stat-val" id="statTags">0</div><div class="stat-lbl">Total Tags</div></div>
+          <div class="stat-card"><div class="stat-val" id="statPlayers">0</div><div class="stat-lbl">Active Players</div></div>
+          <div class="stat-card"><div class="stat-val" id="statEvents">0</div><div class="stat-lbl">Total Events</div></div>
+        </div>
+        <div id="playerStatBars"></div>
+      </div>
+    </div>
+  </div>
+  <footer><span class="logo">OZTAG IQ</span><span>© 2025 Oztag IQ · For teams, by players</span></footer>
+</div>
+
+<!-- ═══ SIDELINE ═══ -->
+<div id="sideline" class="page">
+  <div class="section-header">
+    <div class="section-label">Sideline Mode</div>
+    <h2 class="section-title">THE GAME BOARD<br><span>ON YOUR WRIST.</span></h2>
+  </div>
+  <section class="sideline-hero">
+    <div class="watch-wrap">
+      <div class="watch">
+        <div class="watch-screen">
+          <div class="watch-label" id="watchLabel">Ready</div>
+          <div class="watch-score" id="watchScore">0–0</div>
+          <div class="watch-vs">HOME · AWAY</div>
+          <div class="watch-stats-grid">
+            <div class="watch-stat"><div class="watch-stat-val" id="watchTries">0</div><div class="watch-stat-lbl">Tries</div></div>
+            <div class="watch-stat"><div class="watch-stat-val" id="watchTags">0</div><div class="watch-stat-lbl">Tags</div></div>
+            <div class="watch-stat"><div class="watch-stat-val" id="watchTime">00:00</div><div class="watch-stat-lbl">Time</div></div>
+            <div class="watch-stat"><div class="watch-stat-val" id="watchPlayers">0</div><div class="watch-stat-lbl">Squad</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sideline-features">
+      <div class="sl-feature">
+        <div class="sl-icon">👁️</div>
+        <div>
+          <h3>Keep Your Eyes on the Game</h3>
+          <p>The compact SmartWatch UI shows score, tries, and tag contributions at a glance — no need to look down at your phone. Updates live from your match log.</p>
+        </div>
+      </div>
+      <div class="sl-feature">
+        <div class="sl-icon">📳</div>
+        <div>
+          <h3>Haptic Feedback</h3>
+          <p>Your watch taps you when a try is scored. Feel the game unfold without breaking focus from the field.</p>
+        </div>
+      </div>
+      <div class="sl-feature">
+        <div class="sl-icon">🔄</div>
+        <div>
+          <h3>Live Squad Scroll</h3>
+          <p>The watch display reflects your real squad and live match data from the App page in real time.</p>
+        </div>
+      </div>
+      <div class="app-panel" style="margin-top:0;">
+        <div class="panel-title">TOP PLAYERS (LIVE)</div>
+        <div id="sidelinePlayerList" style="font-family:var(--font-m);font-size:.8rem;color:#666;">No match data yet — go log some tries!</div>
+      </div>
+    </div>
+  </section>
+  <footer><span class="logo">OZTAG IQ</span><span>© 2025 Oztag IQ · For teams, by players</span></footer>
+</div>
+
+<!-- ═══ TEAM HUB ═══ -->
+<div id="teamhub" class="page">
+  <div class="section-header">
+    <div class="section-label">Team Hub</div>
+    <h2 class="section-title">THE TEAM<br><span>ROOM.</span></h2>
+  </div>
+  <div class="team-hub-layout">
+    <div class="hub-top">
+      <div class="hub-badge"><div class="live-dot"></div>Real-time standings for the squad</div>
+      <div class="hub-actions">
+        <button class="btn btn-secondary" style="padding:.6rem 1.25rem;font-size:.75rem;" onclick="shareStatusLink()">Share Status Link</button>
+        <button class="btn btn-primary" style="padding:.6rem 1.25rem;font-size:.75rem;" onclick="showPage('app')">+ Log Match</button>
+      </div>
+    </div>
+    <table class="standings-table">
+      <thead>
+        <tr>
+          <th>Player</th>
+          <th>Matches</th>
+          <th>Tries</th>
+          <th>Tags</th>
+          <th>Pts Contribution</th>
+        </tr>
+      </thead>
+      <tbody id="standingsBody"></tbody>
+    </table>
+    <div class="hub-bottom-cards">
+      <div class="hub-card">
+        <h3>NEXT MATCH</h3>
+        <p>Your next scheduled game</p>
+        <div class="next-match-details">
+          <div class="match-detail-row"><span>Date</span><input id="nmDate" value="Saturday 14 Jun" /></div>
+          <div class="match-detail-row"><span>Time</span><input id="nmTime" value="9:00 AM" /></div>
+          <div class="match-detail-row"><span>Venue</span><input id="nmVenue" value="Field 3, North Oval" /></div>
+          <div class="match-detail-row"><span>Opposition</span><input id="nmOppo" value="Thunder Taggers" /></div>
+        </div>
+        <button class="btn btn-secondary btn-small" style="margin-top:1rem;width:100%;" onclick="saveNextMatch()">Save Details</button>
+      </div>
+      <div class="hub-card">
+        <h3>SEASON SUMMARY</h3>
+        <p>Cumulative stats from all logged matches</p>
+        <div class="stats-grid" style="grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem;">
+          <div class="stat-card"><div class="stat-val" id="seasonTries">0</div><div class="stat-lbl">Total Tries</div></div>
+          <div class="stat-card"><div class="stat-val" id="seasonTags">0</div><div class="stat-lbl">Total Tags</div></div>
+        </div>
+        <div id="seasonBars"></div>
+      </div>
+    </div>
+  </div>
+  <footer><span class="logo">OZTAG IQ</span><span>© 2025 Oztag IQ · For teams, by players</span></footer>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let state = {
+  players: [],         // {id, name, tries, tags, matches}
+  matchLog: [],        // {id, time, player, action, timestamp}
+  timerRunning: false,
+  timerSeconds: 0,
+  selectedPlayer: null,
+  matchActive: false,
+  nextMatch: { date:'Saturday 14 Jun', time:'9:00 AM', venue:'Field 3, North Oval', oppo:'Thunder Taggers' },
+  matchCount: 0,
+  awayTries: 0
+};
+let timerInterval = null;
+
+// ═══════════════════════════════════════════════════
+// PERSISTENCE
+// ═══════════════════════════════════════════════════
+function save() {
+  try { localStorage.setItem('oztagiq_v2', JSON.stringify(state)); } catch(e){}
+}
+function load() {
+  try {
+    const d = localStorage.getItem('oztagiq_v2');
+    if (d) state = { ...state, ...JSON.parse(d), timerRunning: false };
+  } catch(e){}
+}
+
+// ═══════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('nav-' + id).classList.add('active');
+  window.scrollTo(0, 0);
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════
+// TIMER
+// ═══════════════════════════════════════════════════
+function toggleTimer() {
+  if (state.timerRunning) {
+    clearInterval(timerInterval);
+    state.timerRunning = false;
+    document.getElementById('timerBtn').textContent = 'Resume';
+    document.getElementById('matchStatus').textContent = 'Paused';
+  } else {
+    state.matchActive = true;
+    state.timerRunning = true;
+    document.getElementById('timerBtn').textContent = 'Pause';
+    document.getElementById('matchStatus').textContent = 'Live';
+    timerInterval = setInterval(() => {
+      state.timerSeconds++;
+      updateTimerDisplay();
+      save();
+    }, 1000);
+  }
+  save();
+}
+function resetTimer() {
+  clearInterval(timerInterval);
+  state.timerRunning = false;
+  state.timerSeconds = 0;
+  document.getElementById('timerBtn').textContent = 'Start';
+  document.getElementById('matchStatus').textContent = 'Ready';
+  updateTimerDisplay();
+  save();
+}
+function resetMatch() {
+  if (!confirm('Start a new match? This will save current stats to season totals and reset the log.')) return;
+  clearInterval(timerInterval);
+  // increment match count for players with activity
+  state.players.forEach(p => {
+    if (p.tries > 0 || p.tags > 0) p.matches = (p.matches || 0) + 1;
+  });
+  state.matchCount++;
+  state.matchLog = [];
+  state.timerRunning = false;
+  state.timerSeconds = 0;
+  state.matchActive = false;
+  state.selectedPlayer = null;
+  state.awayTries = 0;
+  document.getElementById('timerBtn').textContent = 'Start';
+  document.getElementById('matchStatus').textContent = 'Ready';
+  updateTimerDisplay();
+  save();
+  renderAll();
+  toast('New match started!');
+}
+function updateTimerDisplay() {
+  const m = Math.floor(state.timerSeconds / 60).toString().padStart(2,'0');
+  const s = (state.timerSeconds % 60).toString().padStart(2,'0');
+  const str = m + ':' + s;
+  const el = document.getElementById('matchTimer');
+  if (el) el.textContent = str;
+  const wt = document.getElementById('watchTime');
+  if (wt) wt.textContent = str;
+  const hl = document.getElementById('heroGameLabel');
+  if (hl) hl.textContent = state.matchActive ? 'Live · ' + str : 'Ready';
+}
+
+// ═══════════════════════════════════════════════════
+// PLAYERS
+// ═══════════════════════════════════════════════════
+function quickAddPlayer() {
+  const inp = document.getElementById('quickAddInput');
+  const name = inp.value.trim();
+  if (!name) return;
+  addPlayer(name);
+  inp.value = '';
+}
+function addPlayer(name) {
+  if (!name) return;
+  if (state.players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
+    toast('Player already in squad!'); return;
+  }
+  state.players.push({ id: Date.now(), name, tries: 0, tags: 0, matches: 0 });
+  save();
+  renderAll();
+  toast(name + ' added to squad!');
+}
+function removePlayer(id) {
+  state.players = state.players.filter(p => p.id !== id);
+  if (state.selectedPlayer === id) state.selectedPlayer = null;
+  save();
+  renderAll();
+}
+function confirmAddPlayer() {
+  const name = document.getElementById('newPlayerName').value.trim();
+  if (name) { addPlayer(name); closeModal(); document.getElementById('newPlayerName').value = ''; }
+}
+function closeModal() { document.getElementById('addPlayerModal').classList.add('hidden'); }
+
+// ═══════════════════════════════════════════════════
+// MATCH LOG
+// ═══════════════════════════════════════════════════
+function selectPlayer(id) {
+  state.selectedPlayer = state.selectedPlayer === id ? null : id;
+  renderPlayerTapGrid();
+  const disabled = state.selectedPlayer === null;
+  document.getElementById('tryBtn').disabled = disabled;
+  document.getElementById('tagBtn').disabled = disabled;
+}
+function logAction(action) {
+  if (!state.selectedPlayer) return;
+  const player = state.players.find(p => p.id === state.selectedPlayer);
+  if (!player) return;
+  const m = Math.floor(state.timerSeconds / 60).toString().padStart(2,'0');
+  const s = (state.timerSeconds % 60).toString().padStart(2,'0');
+  const entry = { id: Date.now(), time: m+':'+s, player: player.name, playerId: player.id, action };
+  state.matchLog.unshift(entry);
+  if (action === 'try') player.tries++;
+  if (action === 'tag') player.tags++;
+  save();
+  renderAll();
+  toast(player.name + ': ' + (action === 'try' ? 'Try scored! 🏉' : 'Tag logged!'));
+}
+function deleteLogEntry(id) {
+  const entry = state.matchLog.find(e => e.id === id);
+  if (entry) {
+    const player = state.players.find(p => p.id === entry.playerId);
+    if (player) {
+      if (entry.action === 'try' && player.tries > 0) player.tries--;
+      if (entry.action === 'tag' && player.tags > 0) player.tags--;
+    }
+    state.matchLog = state.matchLog.filter(e => e.id !== id);
+    save();
+    renderAll();
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// NEXT MATCH SAVE
+// ═══════════════════════════════════════════════════
+function saveNextMatch() {
+  state.nextMatch = {
+    date: document.getElementById('nmDate').value,
+    time: document.getElementById('nmTime').value,
+    venue: document.getElementById('nmVenue').value,
+    oppo: document.getElementById('nmOppo').value
+  };
+  save();
+  toast('Next match saved!');
+}
+function shareStatusLink() {
+  const text = 'Oztag IQ Live — Home ' + getTries() + ' – ' + (state.awayTries||0) + ' Away | Time: ' + getTimeStr();
+  if (navigator.clipboard) navigator.clipboard.writeText(text);
+  toast('Status copied to clipboard!');
+}
+function changeAwayTries(delta) {
+  state.awayTries = Math.max(0, (state.awayTries || 0) + delta);
+  save();
+  updateScoreDisplay();
+  if (delta > 0) toast('Away try scored!');
+}
+function getTries() { return state.players.reduce((s,p)=>s+p.tries,0); }
+function getTags() { return state.players.reduce((s,p)=>s+p.tags,0); }
+function getTimeStr() { const m=Math.floor(state.timerSeconds/60).toString().padStart(2,'0'); const s=(state.timerSeconds%60).toString().padStart(2,'0'); return m+':'+s; }
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+let toastTimeout;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════
+function renderAll() {
+  renderRoster();
+  renderPlayerTapGrid();
+  renderMatchLog();
+  renderLiveStats();
+  renderStandings();
+  renderSidelineWatch();
+  renderSeasonSummary();
+  updateScoreDisplay();
+}
+
+function renderRoster() {
+  const el = document.getElementById('rosterList');
+  if (!el) return;
+  if (state.players.length === 0) {
+    el.innerHTML = '<li style="padding:.75rem;color:#444;font-family:var(--font-m);font-size:.75rem;text-align:center;">No players yet — add your squad!</li>';
+    return;
+  }
+  el.innerHTML = state.players.map(p => `
+    <li class="roster-item">
+      <span class="roster-name">${p.name}</span>
+      <div class="roster-actions">
+        <span style="color:#555;font-size:.65rem;">${p.tries}T ${p.tags}Tg</span>
+        <button class="icon-btn danger" onclick="removePlayer(${p.id})">✕</button>
+      </div>
+    </li>`).join('');
+}
+
+function renderPlayerTapGrid() {
+  const el = document.getElementById('playerTapGrid');
+  if (!el) return;
+  if (state.players.length === 0) {
+    el.innerHTML = '<span style="font-family:var(--font-m);font-size:.75rem;color:#444;">Add players to your roster first</span>';
+    return;
+  }
+  el.innerHTML = state.players.map(p => `
+    <button class="player-tap ${state.selectedPlayer === p.id ? 'selected' : ''}" onclick="selectPlayer(${p.id})">${p.name}</button>
+  `).join('');
+}
+
+function renderMatchLog() {
+  const el = document.getElementById('matchLogScroll');
+  if (!el) return;
+  if (state.matchLog.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:2rem;color:#444;font-family:var(--font-m);font-size:.75rem;">No events yet — start the timer and log!</div>';
+    return;
+  }
+  el.innerHTML = state.matchLog.map(e => `
+    <div class="log-entry">
+      <span class="log-time">${e.time}</span>
+      <span class="log-player">${e.player}</span>
+      <span class="log-action-badge ${e.action === 'try' ? 'badge-try' : 'badge-tag'}">${e.action === 'try' ? 'TRY' : 'TAG'}</span>
+      <button class="log-del" onclick="deleteLogEntry(${e.id})" title="Remove">✕</button>
+    </div>`).join('');
+}
+
+function renderLiveStats() {
+  const tries = getTries();
+  const tags = getTags();
+  const events = state.matchLog.length;
+  const activePlayers = state.players.filter(p => p.tries > 0 || p.tags > 0).length;
+  const set = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
+  set('statTries', tries);
+  set('statTags', tags);
+  set('statPlayers', activePlayers);
+  set('statEvents', events);
+  // hero phone
+  set('heroTries', tries);
+  set('heroTags', tags);
+  set('heroHome', tries);
+  // top scorer
+  const sorted = [...state.players].sort((a,b) => b.tries - a.tries);
+  set('heroTopScorer', sorted.length && sorted[0].tries > 0 ? sorted[0].name + ' · ' + sorted[0].tries + ' tries' : '—');
+  // player bars
+  const barsEl = document.getElementById('playerStatBars');
+  if (barsEl && state.players.length > 0) {
+    const maxTries = Math.max(...state.players.map(p=>p.tries), 1);
+    barsEl.innerHTML = state.players.filter(p=>p.tries>0||p.tags>0).map(p => `
+      <div class="bar-row">
+        <div class="bar-label"><span>${p.name}</span><span>${p.tries} tries · ${p.tags} tags</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(p.tries/maxTries*100)}%"></div></div>
+      </div>`).join('') || '<div style="color:#444;font-size:.75rem;font-family:var(--font-m);">No stats yet</div>';
+  }
+}
+
+function updateScoreDisplay() {
+  const home = getTries();
+  const away = state.awayTries || 0;
+  const el = document.getElementById('scoreDisplay');
+  if (el) el.textContent = 'Home ' + home + ' – ' + away + ' Away';
+  const hd = document.getElementById('homeScoreDisplay');
+  if (hd) hd.textContent = home;
+  const ad = document.getElementById('awayScoreDisplay');
+  if (ad) ad.textContent = away;
+  // hero phone
+  const ha = document.getElementById('heroAway');
+  if (ha) ha.textContent = away;
+  // watch
+  const ws = document.getElementById('watchScore');
+  if (ws) ws.textContent = home + '–' + away;
+}
+
+function renderStandings() {
+  const el = document.getElementById('standingsBody');
+  if (!el) return;
+  if (state.players.length === 0) {
+    el.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#444;font-family:var(--font-m);font-size:.75rem;">No players yet — add your squad in The App</td></tr>';
+    return;
+  }
+  const sorted = [...state.players].sort((a,b)=>(b.tries*2+b.tags)-(a.tries*2+a.tags));
+  el.innerHTML = sorted.map((p,i) => `
+    <tr>
+      <td><div class="player-name">${p.name}${i===0 && p.tries>0?'<span class="you-badge">TOP</span>':''}</div></td>
+      <td>${p.matches}</td>
+      <td class="${p.tries === Math.max(...state.players.map(x=>x.tries)) && p.tries>0 ? 'stat-highlight':''}">${p.tries}</td>
+      <td>${p.tags}</td>
+      <td class="${p.tries*2+p.tags === Math.max(...state.players.map(x=>x.tries*2+x.tags)) && (p.tries+p.tags)>0 ? 'stat-highlight':''}">${p.tries * 2 + p.tags}</td>
+    </tr>`).join('');
+}
+
+function renderSidelineWatch() {
+  const tries = getTries();
+  const tags = getTags();
+  const set = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+  set('watchScore', getTries() + '–' + (state.awayTries||0));
+  set('watchTries', tries);
+  set('watchTags', tags);
+  set('watchPlayers', state.players.length);
+  set('watchLabel', state.matchActive ? 'Live Match' : 'Ready');
+  // sideline player list
+  const el = document.getElementById('sidelinePlayerList');
+  if (el) {
+    const active = [...state.players].filter(p=>p.tries>0||p.tags>0).sort((a,b)=>b.tries-a.tries);
+    if (active.length === 0) {
+      el.innerHTML = '<div style="color:#444;font-size:.75rem;">No match data yet — go log some tries!</div>';
+    } else {
+      el.innerHTML = active.map(p=>`
+        <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid #111;font-family:var(--font-m);font-size:.75rem;">
+          <span>${p.name}</span><span style="color:var(--green);">${p.tries}T ${p.tags}Tg</span>
+        </div>`).join('');
+    }
+  }
+}
+
+function renderSeasonSummary() {
+  const allTries = state.players.reduce((s,p)=>s+p.tries,0);
+  const allTags = state.players.reduce((s,p)=>s+p.tags,0);
+  const set = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+  set('seasonTries', allTries);
+  set('seasonTags', allTags);
+  const barsEl = document.getElementById('seasonBars');
+  if (barsEl && state.players.length > 0) {
+    const maxTries = Math.max(...state.players.map(p=>p.tries),1);
+    barsEl.innerHTML = state.players.filter(p=>p.tries>0).map(p=>`
+      <div class="bar-row">
+        <div class="bar-label"><span>${p.name}</span><span>${p.tries} tries</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(p.tries/maxTries*100)}%"></div></div>
+      </div>`).join('') || '<div style="color:#444;font-size:.75rem;font-family:var(--font-m);">No tries logged yet</div>';
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+load();
+// Restore next match inputs
+if (state.nextMatch) {
+  const fields = ['nmDate','nmTime','nmVenue','nmOppo'];
+  const keys = ['date','time','venue','oppo'];
+  fields.forEach((id,i)=>{ const el=document.getElementById(id); if(el&&state.nextMatch[keys[i]]) el.value=state.nextMatch[keys[i]]; });
+}
+renderAll();
+updateTimerDisplay();
+// If timer was running when page closed, mark as paused
+document.getElementById('matchStatus').textContent = state.matchActive ? 'Paused' : 'Ready';
+document.getElementById('timerBtn').textContent = 'Start';
+
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
+
+</script>
+</body>
+</html>
