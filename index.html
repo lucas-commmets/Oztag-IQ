@@ -259,7 +259,16 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
+
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(r => r.unregister());
+  });
+}
+
 // ═══ SUPABASE INIT ═══
 const supabaseUrl = "https://cfvvoseatrylzbrlckie.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmdnZvc2VhdHJ5bHpicmxja2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODEyMTIsImV4cCI6MjA5NTg1NzIxMn0.gJyH6YLWx8Z1Psgif09anY7I_bJQwTadyC4kPBAlA-k";
@@ -695,7 +704,7 @@ document.getElementById('timerBtn').textContent = 'Start';
 loadPlayers();
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js');
+  navigator.serviceWorker.register('./sw.js', { scope: './' });
 }
 </script>
 </body>
