@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./style.css">
 <link rel="manifest" href="./manifest.json">
-  <meta name="theme-color" content="#b8ff57">
+<meta name="theme-color" content="#b8ff57">
 </head>
 <body>
 
@@ -81,7 +81,6 @@
     <h2 class="section-title">LOG THE<br><span>GAME.</span></h2>
   </div>
   <div class="app-layout">
-    <!-- LEFT: Roster + Logger -->
     <div style="display:flex;flex-direction:column;gap:1.5rem;">
       <!-- Match Timer -->
       <div class="app-panel">
@@ -243,7 +242,7 @@
           <div class="match-detail-row"><span>Venue</span><input id="nmVenue" value="Field 3, North Oval" /></div>
           <div class="match-detail-row"><span>Opposition</span><input id="nmOppo" value="Thunder Taggers" /></div>
         </div>
-        <button class="btn btn-secondary btn-small" style="margin-top:1rem;width:100%;" onclick="NextMatch()"> Details</button>
+        <button class="btn btn-secondary btn-small" style="margin-top:1rem;width:100%;" onclick="NextMatch()">Save Details</button>
       </div>
       <div class="hub-card">
         <h3>SEASON SUMMARY</h3>
@@ -261,30 +260,26 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-//Data base//
-
+// ═══ SUPABASE INIT ═══
 const supabaseUrl = "https://cfvvoseatrylzbrlckie.supabase.co";
-const supabaseKey = "sb_publishable_nfsvTbp-hBz3FbnwtNkKCg_bXgNuVtn";
-
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmdnZvc2VhdHJ5bHpicmxja2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODEyMTIsImV4cCI6MjA5NTg1NzIxMn0.gJyH6YLWx8Z1Psgif09anY7I_bJQwTadyC4kPBAlA-k";
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
+// ═══ STATE ═══
 let state = {
-  players: [],         // {id, name, tries, tags, matches}
-  matchLog: [],        // {id, time, player, action, timestamp}
+  players: [],
+  matchLog: [],
   timerRunning: false,
   timerSeconds: 0,
   selectedPlayer: null,
   matchActive: false,
-  nextMatch: { date:'Saturday 14 Jun', time:'9:00 AM', venue:'Field 3, North Oval', oppo:'Thunder Taggers' },
+  nextMatch: { date: 'Saturday 14 Jun', time: '9:00 AM', venue: 'Field 3, North Oval', oppo: 'Thunder Taggers' },
   matchCount: 0,
   awayTries: 0
 };
 let timerInterval = null;
 
-
-
-
-
+// ═══ NAVIGATION ═══
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
@@ -294,7 +289,7 @@ function showPage(id) {
   renderAll();
 }
 
-
+// ═══ TIMER ═══
 function toggleTimer() {
   if (state.timerRunning) {
     clearInterval(timerInterval);
@@ -309,11 +304,11 @@ function toggleTimer() {
     timerInterval = setInterval(() => {
       state.timerSeconds++;
       updateTimerDisplay();
-     
     }, 1000);
   }
   updateTimerDisplay();
 }
+
 function resetTimer() {
   clearInterval(timerInterval);
   state.timerRunning = false;
@@ -322,10 +317,10 @@ function resetTimer() {
   document.getElementById('matchStatus').textContent = 'Ready';
   updateTimerDisplay();
 }
+
 function resetMatch() {
-  if (!confirm('Start a new match? This will  current stats to season totals and reset the log.')) return;
+  if (!confirm('Start a new match? This will save current stats to season totals and reset the log.')) return;
   clearInterval(timerInterval);
-  // increment match count for players with activity
   state.players.forEach(p => {
     if (p.tries > 0 || p.tags > 0) p.matches = (p.matches || 0) + 1;
   });
@@ -338,23 +333,23 @@ function resetMatch() {
   state.awayTries = 0;
   document.getElementById('timerBtn').textContent = 'Start';
   document.getElementById('matchStatus').textContent = 'Ready';
+  document.getElementById('tryBtn').disabled = true;
+  document.getElementById('tagBtn').disabled = true;
   updateTimerDisplay();
   renderAll();
   toast('New match started!');
 }
+
 function updateTimerDisplay() {
-  const m = Math.floor(state.timerSeconds / 60).toString().padStart(2,'0');
-  const s = (state.timerSeconds % 60).toString().padStart(2,'0');
+  const m = Math.floor(state.timerSeconds / 60).toString().padStart(2, '0');
+  const s = (state.timerSeconds % 60).toString().padStart(2, '0');
   const str = m + ':' + s;
-  const el = document.getElementById('matchTimer');
-  if (el) el.textContent = str;
-  const wt = document.getElementById('watchTime');
-  if (wt) wt.textContent = str;
-  const hl = document.getElementById('heroGameLabel');
-  if (hl) hl.textContent = state.matchActive ? 'Live · ' + str : 'Ready';
+  const el = document.getElementById('matchTimer'); if (el) el.textContent = str;
+  const wt = document.getElementById('watchTime'); if (wt) wt.textContent = str;
+  const hl = document.getElementById('heroGameLabel'); if (hl) hl.textContent = state.matchActive ? 'Live · ' + str : 'Ready';
 }
 
-
+// ═══ PLAYERS ═══
 function quickAddPlayer() {
   const inp = document.getElementById('quickAddInput');
   const name = inp.value.trim();
@@ -362,106 +357,132 @@ function quickAddPlayer() {
   addPlayer(name);
   inp.value = '';
 }
+
 async function addPlayer(name) {
   if (!name) return;
   if (state.players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
     toast('Player already in squad!');
     return;
   }
-
-  const { data, error } = await supabase
-    .from("players")
-    .insert([
-      {
-        name: name,
-        tries: 0,
-        tags: 0,
-        matches: 0
-      }
-    ])
-    .select();
-
+  const { error } = await supabase
+    .from('players')
+    .insert([{ name, tries: 0, tags: 0, matches: 0 }]);
   if (error) {
-    console.error(error);
-    toast("Error adding player");
+    console.error('addPlayer error:', error);
+    toast('Error adding player');
     return;
   }
-
   await loadPlayers();
 }
 
 async function loadPlayers() {
   const { data, error } = await supabase
-    .from("players")
-    .select("*");
-
+    .from('players')
+    .select('*')
+    .order('id', { ascending: true });
   if (error) {
-    console.error(error);
-    toast("Failed to load players");
+    console.error('loadPlayers error:', error);
+    toast('Failed to load players');
     return;
   }
-
-  state.players = data;
+  state.players = data || [];
   renderAll();
 }
-async function removePlayer(id) {
-  const { error } = await supabase
-    .from("players")
-    .delete()
-    .eq("id", id);
 
+async function removePlayer(id) {
+  id = Number(id);
+  const { error } = await supabase
+    .from('players')
+    .delete()
+    .eq('id', id);
   if (error) {
-    toast("Error removing player");
+    console.error('removePlayer error:', error);
+    toast('Error removing player');
     return;
   }
-
+  // Clear selection if removed player was selected
+  if (state.selectedPlayer === id) {
+    state.selectedPlayer = null;
+    document.getElementById('tryBtn').disabled = true;
+    document.getElementById('tagBtn').disabled = true;
+  }
   state.players = state.players.filter(p => p.id !== id);
   renderAll();
 }
 
 function confirmAddPlayer() {
   const name = document.getElementById('newPlayerName').value.trim();
-  if (name) { addPlayer(name); closeModal(); document.getElementById('newPlayerName').value = ''; }
+  if (name) {
+    addPlayer(name);
+    closeModal();
+    document.getElementById('newPlayerName').value = '';
+  }
 }
-function closeModal() { document.getElementById('addPlayerModal').classList.add('hidden'); }
 
+function closeModal() {
+  document.getElementById('addPlayerModal').classList.add('hidden');
+}
 
+// ═══ MATCH LOGGING ═══
+// FIX: ensure ID is always Number for consistent === comparison
 function selectPlayer(id) {
+  id = Number(id);
   state.selectedPlayer = state.selectedPlayer === id ? null : id;
   renderPlayerTapGrid();
   const disabled = state.selectedPlayer === null;
   document.getElementById('tryBtn').disabled = disabled;
   document.getElementById('tagBtn').disabled = disabled;
 }
-function logAction(action) {
+
+// FIX: async — saves stats to Supabase so ALL users see updates
+async function logAction(action) {
   if (!state.selectedPlayer) return;
   const player = state.players.find(p => p.id === state.selectedPlayer);
   if (!player) return;
-  const m = Math.floor(state.timerSeconds / 60).toString().padStart(2,'0');
-  const s = (state.timerSeconds % 60).toString().padStart(2,'0');
-  const entry = {id: Date.now(), time: m+':'+s, player: player.name, playerId: player.id, action };
+
+  const m = Math.floor(state.timerSeconds / 60).toString().padStart(2, '0');
+  const s = (state.timerSeconds % 60).toString().padStart(2, '0');
+  const entry = { id: Date.now(), time: m + ':' + s, player: player.name, playerId: player.id, action };
   state.matchLog.unshift(entry);
+
   if (action === 'try') player.tries++;
   if (action === 'tag') player.tags++;
+
+  // Persist to Supabase so other users see updated stats
+  const { error } = await supabase
+    .from('players')
+    .update({ tries: player.tries, tags: player.tags })
+    .eq('id', player.id);
+  if (error) console.error('logAction save error:', error);
+
   updateScoreDisplay();
   renderAll();
   toast(player.name + ': ' + (action === 'try' ? 'Try scored! 🏉' : 'Tag logged!'));
 }
-function deleteLogEntry(id) {
+
+// FIX: async — syncs deletions back to Supabase
+async function deleteLogEntry(id) {
+  id = Number(id);
   const entry = state.matchLog.find(e => e.id === id);
-  if (entry) {
-    const player = state.players.find(p => p.id === entry.playerId);
-    if (player) {
-      if (entry.action === 'try' && player.tries > 0) player.tries--;
-      if (entry.action === 'tag' && player.tags > 0) player.tags--;
-    }
-    state.matchLog = state.matchLog.filter(e => e.id !== id);
-    updateScoreDisplay();
-    renderAll();
+  if (!entry) return;
+
+  const player = state.players.find(p => p.id === entry.playerId);
+  if (player) {
+    if (entry.action === 'try' && player.tries > 0) player.tries--;
+    if (entry.action === 'tag' && player.tags > 0) player.tags--;
+    const { error } = await supabase
+      .from('players')
+      .update({ tries: player.tries, tags: player.tags })
+      .eq('id', player.id);
+    if (error) console.error('deleteLogEntry save error:', error);
   }
+
+  state.matchLog = state.matchLog.filter(e => e.id !== id);
+  updateScoreDisplay();
+  renderAll();
 }
 
-
+// ═══ TEAM HUB ═══
 function NextMatch() {
   state.nextMatch = {
     date: document.getElementById('nmDate').value,
@@ -469,24 +490,32 @@ function NextMatch() {
     venue: document.getElementById('nmVenue').value,
     oppo: document.getElementById('nmOppo').value
   };
-    renderAll();
-    toast('Next match d!');
+  renderAll();
+  toast('Next match saved!');
 }
+
 function shareStatusLink() {
-  const text = 'Oztag IQ Live — Home ' + getTries() + ' – ' + (state.awayTries||0) + ' Away | Time: ' + getTimeStr();
+  const text = 'Oztag IQ Live — Home ' + getTries() + ' – ' + (state.awayTries || 0) + ' Away | Time: ' + getTimeStr();
   if (navigator.clipboard) navigator.clipboard.writeText(text);
   toast('Status copied to clipboard!');
 }
+
 function changeAwayTries(delta) {
   state.awayTries = Math.max(0, (state.awayTries || 0) + delta);
   updateScoreDisplay();
   if (delta > 0) toast('Away try scored!');
 }
-function getTries() { return state.players.reduce((s,p)=>s+p.tries,0); }
-function getTags() { return state.players.reduce((s,p)=>s+p.tags,0); }
-function getTimeStr() { const m=Math.floor(state.timerSeconds/60).toString().padStart(2,'0'); const s=(state.timerSeconds%60).toString().padStart(2,'0'); return m+':'+s; }
 
+// ═══ HELPERS ═══
+function getTries() { return state.players.reduce((s, p) => s + (p.tries || 0), 0); }
+function getTags() { return state.players.reduce((s, p) => s + (p.tags || 0), 0); }
+function getTimeStr() {
+  const m = Math.floor(state.timerSeconds / 60).toString().padStart(2, '0');
+  const s = (state.timerSeconds % 60).toString().padStart(2, '0');
+  return m + ':' + s;
+}
 
+// ═══ TOAST ═══
 let toastTimeout;
 function toast(msg) {
   const el = document.getElementById('toast');
@@ -496,7 +525,7 @@ function toast(msg) {
   toastTimeout = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
-
+// ═══ RENDER ═══
 function renderAll() {
   renderRoster();
   renderPlayerTapGrid();
@@ -519,7 +548,7 @@ function renderRoster() {
     <li class="roster-item">
       <span class="roster-name">${p.name}</span>
       <div class="roster-actions">
-        <span style="color:#555;font-size:.65rem;">${p.tries}T ${p.tags}Tg</span>
+        <span style="color:#555;font-size:.65rem;">${p.tries || 0}T ${p.tags || 0}Tg</span>
         <button class="icon-btn danger" onclick="removePlayer(${p.id})">✕</button>
       </div>
     </li>`).join('');
@@ -558,26 +587,23 @@ function renderLiveStats() {
   const tags = getTags();
   const events = state.matchLog.length;
   const activePlayers = state.players.filter(p => p.tries > 0 || p.tags > 0).length;
-  const set = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
+  const set = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
   set('statTries', tries);
   set('statTags', tags);
   set('statPlayers', activePlayers);
   set('statEvents', events);
-  // hero phone
   set('heroTries', tries);
   set('heroTags', tags);
   set('heroHome', tries);
-  // top scorer
-  const sorted = [...state.players].sort((a,b) => b.tries - a.tries);
+  const sorted = [...state.players].sort((a, b) => (b.tries || 0) - (a.tries || 0));
   set('heroTopScorer', sorted.length && sorted[0].tries > 0 ? sorted[0].name + ' · ' + sorted[0].tries + ' tries' : '—');
-  // player bars
   const barsEl = document.getElementById('playerStatBars');
   if (barsEl && state.players.length > 0) {
-    const maxTries = Math.max(...state.players.map(p=>p.tries), 1);
-    barsEl.innerHTML = state.players.filter(p=>p.tries>0||p.tags>0).map(p => `
+    const maxTries = Math.max(...state.players.map(p => p.tries || 0), 1);
+    barsEl.innerHTML = state.players.filter(p => p.tries > 0 || p.tags > 0).map(p => `
       <div class="bar-row">
-        <div class="bar-label"><span>${p.name}</span><span>${p.tries} tries · ${p.tags} tags</span></div>
-        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(p.tries/maxTries*100)}%"></div></div>
+        <div class="bar-label"><span>${p.name}</span><span>${p.tries || 0} tries · ${p.tags || 0} tags</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round((p.tries || 0) / maxTries * 100)}%"></div></div>
       </div>`).join('') || '<div style="color:#444;font-size:.75rem;font-family:var(--font-m);">No stats yet</div>';
   }
 }
@@ -585,18 +611,11 @@ function renderLiveStats() {
 function updateScoreDisplay() {
   const home = getTries();
   const away = state.awayTries || 0;
-  const el = document.getElementById('scoreDisplay');
-  if (el) el.textContent = 'Home ' + home + ' – ' + away + ' Away';
-  const hd = document.getElementById('homeScoreDisplay');
-  if (hd) hd.textContent = home;
-  const ad = document.getElementById('awayScoreDisplay');
-  if (ad) ad.textContent = away;
-  // hero phone
-  const ha = document.getElementById('heroAway');
-  if (ha) ha.textContent = away;
-  // watch
-  const ws = document.getElementById('watchScore');
-  if (ws) ws.textContent = home + '–' + away;
+  const el = document.getElementById('scoreDisplay'); if (el) el.textContent = 'Home ' + home + ' – ' + away + ' Away';
+  const hd = document.getElementById('homeScoreDisplay'); if (hd) hd.textContent = home;
+  const ad = document.getElementById('awayScoreDisplay'); if (ad) ad.textContent = away;
+  const ha = document.getElementById('heroAway'); if (ha) ha.textContent = away;
+  const ws = document.getElementById('watchScore'); if (ws) ws.textContent = home + '–' + away;
 }
 
 function renderStandings() {
@@ -606,86 +625,78 @@ function renderStandings() {
     el.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#444;font-family:var(--font-m);font-size:.75rem;">No players yet — add your squad in The App</td></tr>';
     return;
   }
-  const sorted = [...state.players].sort((a,b)=>(b.tries*2+b.tags)-(a.tries*2+a.tags));
-  el.innerHTML = sorted.map((p,i) => `
+  const sorted = [...state.players].sort((a, b) => ((b.tries || 0) * 2 + (b.tags || 0)) - ((a.tries || 0) * 2 + (a.tags || 0)));
+  const maxTries = Math.max(...state.players.map(x => x.tries || 0));
+  const maxPts = Math.max(...state.players.map(x => (x.tries || 0) * 2 + (x.tags || 0)));
+  el.innerHTML = sorted.map((p, i) => `
     <tr>
-      <td><div class="player-name">${p.name}${i===0 && p.tries>0?'<span class="you-badge">TOP</span>':''}</div></td>
-      <td>${p.matches}</td>
-      <td class="${p.tries === Math.max(...state.players.map(x=>x.tries)) && p.tries>0 ? 'stat-highlight':''}">${p.tries}</td>
-      <td>${p.tags}</td>
-      <td class="${p.tries*2+p.tags === Math.max(...state.players.map(x=>x.tries*2+x.tags)) && (p.tries+p.tags)>0 ? 'stat-highlight':''}">${p.tries * 2 + p.tags}</td>
+      <td><div class="player-name">${p.name}${i === 0 && p.tries > 0 ? '<span class="you-badge">TOP</span>' : ''}</div></td>
+      <td>${p.matches || 0}</td>
+      <td class="${(p.tries || 0) === maxTries && p.tries > 0 ? 'stat-highlight' : ''}">${p.tries || 0}</td>
+      <td>${p.tags || 0}</td>
+      <td class="${(p.tries || 0) * 2 + (p.tags || 0) === maxPts && ((p.tries || 0) + (p.tags || 0)) > 0 ? 'stat-highlight' : ''}">${(p.tries || 0) * 2 + (p.tags || 0)}</td>
     </tr>`).join('');
 }
 
 function renderSidelineWatch() {
   const tries = getTries();
   const tags = getTags();
-  const set = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
-  set('watchScore', getTries() + '–' + (state.awayTries||0));
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  set('watchScore', tries + '–' + (state.awayTries || 0));
   set('watchTries', tries);
   set('watchTags', tags);
   set('watchPlayers', state.players.length);
   set('watchLabel', state.matchActive ? 'Live Match' : 'Ready');
-  // sideline player list
   const el = document.getElementById('sidelinePlayerList');
   if (el) {
-    const active = [...state.players].filter(p=>p.tries>0||p.tags>0).sort((a,b)=>b.tries-a.tries);
-    if (active.length === 0) {
-      el.innerHTML = '<div style="color:#444;font-size:.75rem;">No match data yet — go log some tries!</div>';
-    } else {
-      el.innerHTML = active.map(p=>`
+    const active = [...state.players].filter(p => p.tries > 0 || p.tags > 0).sort((a, b) => (b.tries || 0) - (a.tries || 0));
+    el.innerHTML = active.length === 0
+      ? '<div style="color:#444;font-size:.75rem;">No match data yet — go log some tries!</div>'
+      : active.map(p => `
         <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid #111;font-family:var(--font-m);font-size:.75rem;">
-          <span>${p.name}</span><span style="color:var(--green);">${p.tries}T ${p.tags}Tg</span>
+          <span>${p.name}</span><span style="color:var(--green);">${p.tries || 0}T ${p.tags || 0}Tg</span>
         </div>`).join('');
-    }
   }
 }
 
 function renderSeasonSummary() {
-  const allTries = state.players.reduce((s,p)=>s+p.tries,0);
-  const allTags = state.players.reduce((s,p)=>s+p.tags,0);
-  const set = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+  const allTries = state.players.reduce((s, p) => s + (p.tries || 0), 0);
+  const allTags = state.players.reduce((s, p) => s + (p.tags || 0), 0);
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
   set('seasonTries', allTries);
   set('seasonTags', allTags);
   const barsEl = document.getElementById('seasonBars');
   if (barsEl && state.players.length > 0) {
-    const maxTries = Math.max(...state.players.map(p=>p.tries),1);
-    barsEl.innerHTML = state.players.filter(p=>p.tries>0).map(p=>`
+    const maxTries = Math.max(...state.players.map(p => p.tries || 0), 1);
+    barsEl.innerHTML = state.players.filter(p => p.tries > 0).map(p => `
       <div class="bar-row">
-        <div class="bar-label"><span>${p.name}</span><span>${p.tries} tries</span></div>
-        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(p.tries/maxTries*100)}%"></div></div>
+        <div class="bar-label"><span>${p.name}</span><span>${p.tries || 0} tries</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round((p.tries || 0) / maxTries * 100)}%"></div></div>
       </div>`).join('') || '<div style="color:#444;font-size:.75rem;font-family:var(--font-m);">No tries logged yet</div>';
   }
 }
 
-
-
-
+// ═══ INIT ═══
 if (state.nextMatch) {
-  const fields = ['nmDate','nmTime','nmVenue','nmOppo'];
-  const keys = ['date','time','venue','oppo'];
-  fields.forEach((id,i)=>{ const el=document.getElementById(id); if(el&&state.nextMatch[keys[i]]) el.value=state.nextMatch[keys[i]]; });
+  const fields = ['nmDate', 'nmTime', 'nmVenue', 'nmOppo'];
+  const keys = ['date', 'time', 'venue', 'oppo'];
+  fields.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (el && state.nextMatch[keys[i]]) el.value = state.nextMatch[keys[i]];
+  });
 }
+
 renderAll();
 updateTimerDisplay();
+document.getElementById('matchStatus').textContent = 'Ready';
+document.getElementById('timerBtn').textContent = 'Start';
 
-
+// Load players from Supabase on startup
 loadPlayers();
-renderAll();
-updateTimerDisplay();
-
-// If timer was running when page reloaded
-document.getElementById('matchStatus').textContent = state.matchActive ? 'Paused' : 'Ready';
-document.getElementById('timerBtn').textContent = state.timerRunning ? 'Pause' : 'Start';
 
 if ('serviceWorker' in navigator) {
-  //navigator.serviceWorker.register('/Oztag-IQ/sw.js');
+  navigator.serviceWorker.register('/Oztag-IQ/sw.js');
 }
-
-
 </script>
 </body>
 </html>
-
-
-}
