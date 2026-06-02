@@ -243,7 +243,7 @@
           <div class="match-detail-row"><span>Venue</span><input id="nmVenue" value="Field 3, North Oval" /></div>
           <div class="match-detail-row"><span>Opposition</span><input id="nmOppo" value="Thunder Taggers" /></div>
         </div>
-        <button class="btn btn-secondary btn-small" style="margin-top:1rem;width:100%;" onclick="saveNextMatch()">Save Details</button>
+        <button class="btn btn-secondary btn-small" style="margin-top:1rem;width:100%;" onclick="NextMatch()"> Details</button>
       </div>
       <div class="hub-card">
         <h3>SEASON SUMMARY</h3>
@@ -259,10 +259,15 @@
   <footer><span class="logo">OZTAG IQ</span><span>© 2025 Oztag IQ · For teams, by players</span></footer>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// ═══════════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════════
+//Data base//
+
+const supabaseUrl = "https://cfvvoseatrylzbrlckie.supabase.co";
+const supabaseKey = "sb_publishable_nfsvTbp-hBz3FbnwtNkKCg_bXgNuVtn";
+
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
 let state = {
   players: [],         // {id, name, tries, tags, matches}
   matchLog: [],        // {id, time, player, action, timestamp}
@@ -276,22 +281,10 @@ let state = {
 };
 let timerInterval = null;
 
-// ═══════════════════════════════════════════════════
-// PERSISTENCE
-// ═══════════════════════════════════════════════════
-function save() {
-  try { localStorage.setItem('oztagiq_v2', JSON.stringify(state)); } catch(e){}
-}
-function load() {
-  try {
-    const d = localStorage.getItem('oztagiq_v2');
-    if (d) state = { ...state, ...JSON.parse(d), timerRunning: false };
-  } catch(e){}
-}
 
-// ═══════════════════════════════════════════════════
-// NAVIGATION
-// ═══════════════════════════════════════════════════
+
+
+
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
@@ -301,9 +294,7 @@ function showPage(id) {
   renderAll();
 }
 
-// ═══════════════════════════════════════════════════
-// TIMER
-// ═══════════════════════════════════════════════════
+
 function toggleTimer() {
   if (state.timerRunning) {
     clearInterval(timerInterval);
@@ -318,10 +309,10 @@ function toggleTimer() {
     timerInterval = setInterval(() => {
       state.timerSeconds++;
       updateTimerDisplay();
-      save();
+     
     }, 1000);
   }
-  save();
+  updateTimerDisplay();
 }
 function resetTimer() {
   clearInterval(timerInterval);
@@ -330,10 +321,9 @@ function resetTimer() {
   document.getElementById('timerBtn').textContent = 'Start';
   document.getElementById('matchStatus').textContent = 'Ready';
   updateTimerDisplay();
-  save();
 }
 function resetMatch() {
-  if (!confirm('Start a new match? This will save current stats to season totals and reset the log.')) return;
+  if (!confirm('Start a new match? This will  current stats to season totals and reset the log.')) return;
   clearInterval(timerInterval);
   // increment match count for players with activity
   state.players.forEach(p => {
@@ -349,7 +339,6 @@ function resetMatch() {
   document.getElementById('timerBtn').textContent = 'Start';
   document.getElementById('matchStatus').textContent = 'Ready';
   updateTimerDisplay();
-  save();
   renderAll();
   toast('New match started!');
 }
@@ -365,9 +354,7 @@ function updateTimerDisplay() {
   if (hl) hl.textContent = state.matchActive ? 'Live · ' + str : 'Ready';
 }
 
-// ═══════════════════════════════════════════════════
-// PLAYERS
-// ═══════════════════════════════════════════════════
+
 function quickAddPlayer() {
   const inp = document.getElementById('quickAddInput');
   const name = inp.value.trim();
@@ -375,31 +362,70 @@ function quickAddPlayer() {
   addPlayer(name);
   inp.value = '';
 }
-function addPlayer(name) {
+async function addPlayer(name) {
   if (!name) return;
   if (state.players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
-    toast('Player already in squad!'); return;
+    toast('Player already in squad!');
+    return;
   }
-  state.players.push({ id: Date.now(), name, tries: 0, tags: 0, matches: 0 });
-  save();
-  renderAll();
-  toast(name + ' added to squad!');
+
+  const { data, error } = await supabase
+    .from("players")
+    .insert([
+      {
+        name: name,
+        tries: 0,
+        tags: 0,
+        matches: 0
+      }
+    ])
+    .select();
+
+  if (error) {
+    console.error(error);
+    toast("Error adding player");
+    return;
+  }
+
+  await loadPlayers();
 }
-function removePlayer(id) {
+
+async function loadPlayers() {
+  const { data, error } = await supabase
+    .from("players")
+    .select("*");
+
+  if (error) {
+    console.error(error);
+    toast("Failed to load players");
+    return;
+  }
+
+  state.players = data;
+  renderAll();
+}
+async function removePlayer(id) {
+  const { error } = await supabase
+    .from("players")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    toast("Error removing player");
+    return;
+  }
+
   state.players = state.players.filter(p => p.id !== id);
-  if (state.selectedPlayer === id) state.selectedPlayer = null;
-  save();
   renderAll();
 }
+
 function confirmAddPlayer() {
   const name = document.getElementById('newPlayerName').value.trim();
   if (name) { addPlayer(name); closeModal(); document.getElementById('newPlayerName').value = ''; }
 }
 function closeModal() { document.getElementById('addPlayerModal').classList.add('hidden'); }
 
-// ═══════════════════════════════════════════════════
-// MATCH LOG
-// ═══════════════════════════════════════════════════
+
 function selectPlayer(id) {
   state.selectedPlayer = state.selectedPlayer === id ? null : id;
   renderPlayerTapGrid();
@@ -413,11 +439,11 @@ function logAction(action) {
   if (!player) return;
   const m = Math.floor(state.timerSeconds / 60).toString().padStart(2,'0');
   const s = (state.timerSeconds % 60).toString().padStart(2,'0');
-  const entry = { id: Date.now(), time: m+':'+s, player: player.name, playerId: player.id, action };
+  const entry = {id: Date.now(), time: m+':'+s, player: player.name, playerId: player.id, action };
   state.matchLog.unshift(entry);
   if (action === 'try') player.tries++;
   if (action === 'tag') player.tags++;
-  save();
+  updateScoreDisplay();
   renderAll();
   toast(player.name + ': ' + (action === 'try' ? 'Try scored! 🏉' : 'Tag logged!'));
 }
@@ -430,23 +456,21 @@ function deleteLogEntry(id) {
       if (entry.action === 'tag' && player.tags > 0) player.tags--;
     }
     state.matchLog = state.matchLog.filter(e => e.id !== id);
-    save();
+    updateScoreDisplay();
     renderAll();
   }
 }
 
-// ═══════════════════════════════════════════════════
-// NEXT MATCH SAVE
-// ═══════════════════════════════════════════════════
-function saveNextMatch() {
+
+function NextMatch() {
   state.nextMatch = {
     date: document.getElementById('nmDate').value,
     time: document.getElementById('nmTime').value,
     venue: document.getElementById('nmVenue').value,
     oppo: document.getElementById('nmOppo').value
   };
-  save();
-  toast('Next match saved!');
+    renderAll();
+    toast('Next match d!');
 }
 function shareStatusLink() {
   const text = 'Oztag IQ Live — Home ' + getTries() + ' – ' + (state.awayTries||0) + ' Away | Time: ' + getTimeStr();
@@ -455,7 +479,6 @@ function shareStatusLink() {
 }
 function changeAwayTries(delta) {
   state.awayTries = Math.max(0, (state.awayTries || 0) + delta);
-  save();
   updateScoreDisplay();
   if (delta > 0) toast('Away try scored!');
 }
@@ -463,9 +486,7 @@ function getTries() { return state.players.reduce((s,p)=>s+p.tries,0); }
 function getTags() { return state.players.reduce((s,p)=>s+p.tags,0); }
 function getTimeStr() { const m=Math.floor(state.timerSeconds/60).toString().padStart(2,'0'); const s=(state.timerSeconds%60).toString().padStart(2,'0'); return m+':'+s; }
 
-// ═══════════════════════════════════════════════════
-// TOAST
-// ═══════════════════════════════════════════════════
+
 let toastTimeout;
 function toast(msg) {
   const el = document.getElementById('toast');
@@ -475,9 +496,7 @@ function toast(msg) {
   toastTimeout = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
-// ═══════════════════════════════════════════════════
-// RENDER
-// ═══════════════════════════════════════════════════
+
 function renderAll() {
   renderRoster();
   renderPlayerTapGrid();
@@ -639,11 +658,9 @@ function renderSeasonSummary() {
   }
 }
 
-// ═══════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════
-load();
-// Restore next match inputs
+
+
+
 if (state.nextMatch) {
   const fields = ['nmDate','nmTime','nmVenue','nmOppo'];
   const keys = ['date','time','venue','oppo'];
@@ -651,10 +668,15 @@ if (state.nextMatch) {
 }
 renderAll();
 updateTimerDisplay();
-// If timer was running when page closed, mark as paused
-document.getElementById('matchStatus').textContent = state.matchActive ? 'Paused' : 'Ready';
-document.getElementById('timerBtn').textContent = 'Start';
 
+
+loadPlayers();
+renderAll();
+updateTimerDisplay();
+
+// If timer was running when page reloaded
+document.getElementById('matchStatus').textContent = state.matchActive ? 'Paused' : 'Ready';
+document.getElementById('timerBtn').textContent = state.timerRunning ? 'Pause' : 'Start';
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/Oztag-IQ/sw.js');
@@ -664,3 +686,6 @@ if ('serviceWorker' in navigator) {
 </script>
 </body>
 </html>
+
+
+}
