@@ -36,7 +36,7 @@
   </div>
 </div>
 
-<!-- ═══ HOME ═══ -->
+<!-- HOME -->
 <div id="home" class="page active">
   <section class="hero">
     <div class="hero-content">
@@ -58,7 +58,7 @@
       <div class="phone-wrap">
         <div class="phone">
           <div class="phone-screen">
-            <div class="phone-score-header"><div class="game-label" id="heroGameLabel">Live · 00:00</div></div>
+            <div class="phone-score-header"><div class="game-label" id="heroGameLabel">Ready</div></div>
             <div class="score-row"><span class="score-team">HOME</span><span class="score-num" id="heroHome">0</span></div>
             <div class="score-row"><span class="score-team">AWAY</span><span class="score-num" id="heroAway">0</span></div>
             <div class="phone-stats">
@@ -74,7 +74,7 @@
   <footer><span class="logo">OZTAG IQ</span><span>© 2025 Oztag IQ · For teams, by players</span></footer>
 </div>
 
-<!-- ═══ THE APP ═══ -->
+<!-- THE APP -->
 <div id="app" class="page">
   <div class="section-header">
     <div class="section-label">Match Day</div>
@@ -82,7 +82,6 @@
   </div>
   <div class="app-layout">
     <div style="display:flex;flex-direction:column;gap:1.5rem;">
-      <!-- Match Timer -->
       <div class="app-panel">
         <div class="panel-title">MATCH TIMER</div>
         <div class="match-timer" id="matchTimer">00:00</div>
@@ -111,7 +110,6 @@
           <span id="matchStatus" style="color:var(--green);">Ready</span>
         </div>
       </div>
-      <!-- Roster -->
       <div class="app-panel">
         <div class="panel-title">SQUAD ROSTER</div>
         <div class="panel-sub">Tap a player in the logger to select them, then log their action.</div>
@@ -122,9 +120,7 @@
         </div>
       </div>
     </div>
-    <!-- RIGHT: Match Logger + Live Stats -->
     <div style="display:flex;flex-direction:column;gap:1.5rem;">
-      <!-- Logger -->
       <div class="app-panel">
         <div class="panel-title">MATCH LOG</div>
         <div class="panel-sub">Select a player, then tap Try or Tag.</div>
@@ -137,7 +133,6 @@
           <div style="text-align:center;padding:2rem;color:#444;font-family:var(--font-m);font-size:.75rem;">No events yet — start the timer and log!</div>
         </div>
       </div>
-      <!-- Live Stats -->
       <div class="app-panel">
         <div class="panel-title">LIVE STATS</div>
         <div class="stats-grid" id="liveStatsGrid">
@@ -153,7 +148,7 @@
   <footer><span class="logo">OZTAG IQ</span><span>© 2025 Oztag IQ · For teams, by players</span></footer>
 </div>
 
-<!-- ═══ SIDELINE ═══ -->
+<!-- SIDELINE -->
 <div id="sideline" class="page">
   <div class="section-header">
     <div class="section-label">Sideline Mode</div>
@@ -180,7 +175,7 @@
         <div class="sl-icon">👁️</div>
         <div>
           <h3>Keep Your Eyes on the Game</h3>
-          <p>The compact SmartWatch UI shows score, tries, and tag contributions at a glance — no need to look down at your phone. Updates live from your match log.</p>
+          <p>The compact SmartWatch UI shows score, tries, and tag contributions at a glance — no need to look down at your phone.</p>
         </div>
       </div>
       <div class="sl-feature">
@@ -206,7 +201,7 @@
   <footer><span class="logo">OZTAG IQ</span><span>© 2025 Oztag IQ · For teams, by players</span></footer>
 </div>
 
-<!-- ═══ TEAM HUB ═══ -->
+<!-- TEAM HUB -->
 <div id="teamhub" class="page">
   <div class="section-header">
     <div class="section-label">Team Hub</div>
@@ -223,11 +218,7 @@
     <table class="standings-table">
       <thead>
         <tr>
-          <th>Player</th>
-          <th>Matches</th>
-          <th>Tries</th>
-          <th>Tags</th>
-          <th>Pts Contribution</th>
+          <th>Player</th><th>Matches</th><th>Tries</th><th>Tags</th><th>Pts Contribution</th>
         </tr>
       </thead>
       <tbody id="standingsBody"></tbody>
@@ -259,17 +250,16 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script>
 
-
+// Nuke any stale service worker caches immediately
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(regs => {
     regs.forEach(r => r.unregister());
   });
 }
 
-// ═══ SUPABASE INIT ═══
+// ═══ SUPABASE ═══
 const supabaseUrl = "https://cfvvoseatrylzbrlckie.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmdnZvc2VhdHJ5bHpicmxja2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODEyMTIsImV4cCI6MjA5NTg1NzIxMn0.gJyH6YLWx8Z1Psgif09anY7I_bJQwTadyC4kPBAlA-k";
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -288,14 +278,26 @@ let state = {
 };
 let timerInterval = null;
 
-// ═══ NAVIGATION ═══
+// ═══ SAFE HELPER — never crashes even if element missing ═══
+function setEl(id, val) {
+  const e = document.getElementById(id);
+  if (e) e.textContent = val;
+}
+
+// ═══ NAVIGATION — null-safe ═══
 function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  document.getElementById('nav-' + id).classList.add('active');
-  window.scrollTo(0, 0);
-  renderAll();
+  try {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+    const page = document.getElementById(id);
+    const nav  = document.getElementById('nav-' + id);
+    if (page) page.classList.add('active');
+    if (nav)  nav.classList.add('active');
+    window.scrollTo(0, 0);
+    renderAll();
+  } catch(e) {
+    console.error('showPage error:', e);
+  }
 }
 
 // ═══ TIMER ═══
@@ -303,17 +305,14 @@ function toggleTimer() {
   if (state.timerRunning) {
     clearInterval(timerInterval);
     state.timerRunning = false;
-    document.getElementById('timerBtn').textContent = 'Resume';
-    document.getElementById('matchStatus').textContent = 'Paused';
+    setEl('timerBtn', 'Resume');
+    setEl('matchStatus', 'Paused');
   } else {
     state.matchActive = true;
     state.timerRunning = true;
-    document.getElementById('timerBtn').textContent = 'Pause';
-    document.getElementById('matchStatus').textContent = 'Live';
-    timerInterval = setInterval(() => {
-      state.timerSeconds++;
-      updateTimerDisplay();
-    }, 1000);
+    setEl('timerBtn', 'Pause');
+    setEl('matchStatus', 'Live');
+    timerInterval = setInterval(() => { state.timerSeconds++; updateTimerDisplay(); }, 1000);
   }
   updateTimerDisplay();
 }
@@ -322,17 +321,15 @@ function resetTimer() {
   clearInterval(timerInterval);
   state.timerRunning = false;
   state.timerSeconds = 0;
-  document.getElementById('timerBtn').textContent = 'Start';
-  document.getElementById('matchStatus').textContent = 'Ready';
+  setEl('timerBtn', 'Start');
+  setEl('matchStatus', 'Ready');
   updateTimerDisplay();
 }
 
 function resetMatch() {
   if (!confirm('Start a new match? This will save current stats to season totals and reset the log.')) return;
   clearInterval(timerInterval);
-  state.players.forEach(p => {
-    if (p.tries > 0 || p.tags > 0) p.matches = (p.matches || 0) + 1;
-  });
+  state.players.forEach(p => { if (p.tries > 0 || p.tags > 0) p.matches = (p.matches || 0) + 1; });
   state.matchCount++;
   state.matchLog = [];
   state.timerRunning = false;
@@ -340,10 +337,10 @@ function resetMatch() {
   state.matchActive = false;
   state.selectedPlayer = null;
   state.awayTries = 0;
-  document.getElementById('timerBtn').textContent = 'Start';
-  document.getElementById('matchStatus').textContent = 'Ready';
-  document.getElementById('tryBtn').disabled = true;
-  document.getElementById('tagBtn').disabled = true;
+  setEl('timerBtn', 'Start');
+  setEl('matchStatus', 'Ready');
+  const tb = document.getElementById('tryBtn'); if (tb) tb.disabled = true;
+  const tg = document.getElementById('tagBtn'); if (tg) tg.disabled = true;
   updateTimerDisplay();
   renderAll();
   toast('New match started!');
@@ -353,14 +350,15 @@ function updateTimerDisplay() {
   const m = Math.floor(state.timerSeconds / 60).toString().padStart(2, '0');
   const s = (state.timerSeconds % 60).toString().padStart(2, '0');
   const str = m + ':' + s;
-  const el = document.getElementById('matchTimer'); if (el) el.textContent = str;
-  const wt = document.getElementById('watchTime'); if (wt) wt.textContent = str;
-  const hl = document.getElementById('heroGameLabel'); if (hl) hl.textContent = state.matchActive ? 'Live · ' + str : 'Ready';
+  setEl('matchTimer', str);
+  setEl('watchTime', str);
+  setEl('heroGameLabel', state.matchActive ? 'Live · ' + str : 'Ready');
 }
 
 // ═══ PLAYERS ═══
 function quickAddPlayer() {
   const inp = document.getElementById('quickAddInput');
+  if (!inp) return;
   const name = inp.value.trim();
   if (!name) return;
   addPlayer(name);
@@ -370,122 +368,81 @@ function quickAddPlayer() {
 async function addPlayer(name) {
   if (!name) return;
   if (state.players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
-    toast('Player already in squad!');
-    return;
+    toast('Player already in squad!'); return;
   }
-  const { error } = await supabase
-    .from('players')
-    .insert([{ name, tries: 0, tags: 0, matches: 0 }]);
-  if (error) {
-    console.error('addPlayer error:', error);
-    toast('Error adding player');
-    return;
-  }
+  const { error } = await supabase.from('players').insert([{ name, tries: 0, tags: 0, matches: 0 }]);
+  if (error) { console.error('addPlayer:', error); toast('Error adding player'); return; }
   await loadPlayers();
 }
 
 async function loadPlayers() {
-  const { data, error } = await supabase
-    .from('players')
-    .select('*')
-    .order('id', { ascending: true });
-  if (error) {
-    console.error('loadPlayers error:', error);
-    toast('Failed to load players');
-    return;
-  }
+  const { data, error } = await supabase.from('players').select('*').order('id', { ascending: true });
+  if (error) { console.error('loadPlayers:', error); toast('Failed to load players'); return; }
   state.players = data || [];
   renderAll();
 }
 
 async function removePlayer(id) {
   id = Number(id);
-  const { error } = await supabase
-    .from('players')
-    .delete()
-    .eq('id', id);
-  if (error) {
-    console.error('removePlayer error:', error);
-    toast('Error removing player');
-    return;
-  }
-  // Clear selection if removed player was selected
+  const { error } = await supabase.from('players').delete().eq('id', id);
+  if (error) { console.error('removePlayer:', error); toast('Error removing player'); return; }
   if (state.selectedPlayer === id) {
     state.selectedPlayer = null;
-    document.getElementById('tryBtn').disabled = true;
-    document.getElementById('tagBtn').disabled = true;
+    const tb = document.getElementById('tryBtn'); if (tb) tb.disabled = true;
+    const tg = document.getElementById('tagBtn'); if (tg) tg.disabled = true;
   }
   state.players = state.players.filter(p => p.id !== id);
   renderAll();
 }
 
 function confirmAddPlayer() {
-  const name = document.getElementById('newPlayerName').value.trim();
-  if (name) {
-    addPlayer(name);
-    closeModal();
-    document.getElementById('newPlayerName').value = '';
-  }
+  const inp = document.getElementById('newPlayerName');
+  if (!inp) return;
+  const name = inp.value.trim();
+  if (name) { addPlayer(name); closeModal(); inp.value = ''; }
 }
 
 function closeModal() {
-  document.getElementById('addPlayerModal').classList.add('hidden');
+  const m = document.getElementById('addPlayerModal');
+  if (m) m.classList.add('hidden');
 }
 
 // ═══ MATCH LOGGING ═══
-// FIX: ensure ID is always Number for consistent === comparison
 function selectPlayer(id) {
   id = Number(id);
   state.selectedPlayer = state.selectedPlayer === id ? null : id;
   renderPlayerTapGrid();
   const disabled = state.selectedPlayer === null;
-  document.getElementById('tryBtn').disabled = disabled;
-  document.getElementById('tagBtn').disabled = disabled;
+  const tb = document.getElementById('tryBtn'); if (tb) tb.disabled = disabled;
+  const tg = document.getElementById('tagBtn'); if (tg) tg.disabled = disabled;
 }
 
-// FIX: async — saves stats to Supabase so ALL users see updates
 async function logAction(action) {
   if (!state.selectedPlayer) return;
   const player = state.players.find(p => p.id === state.selectedPlayer);
   if (!player) return;
-
   const m = Math.floor(state.timerSeconds / 60).toString().padStart(2, '0');
   const s = (state.timerSeconds % 60).toString().padStart(2, '0');
-  const entry = { id: Date.now(), time: m + ':' + s, player: player.name, playerId: player.id, action };
-  state.matchLog.unshift(entry);
-
+  state.matchLog.unshift({ id: Date.now(), time: m+':'+s, player: player.name, playerId: player.id, action });
   if (action === 'try') player.tries++;
   if (action === 'tag') player.tags++;
-
-  // Persist to Supabase so other users see updated stats
-  const { error } = await supabase
-    .from('players')
-    .update({ tries: player.tries, tags: player.tags })
-    .eq('id', player.id);
-  if (error) console.error('logAction save error:', error);
-
+  const { error } = await supabase.from('players').update({ tries: player.tries, tags: player.tags }).eq('id', player.id);
+  if (error) console.error('logAction save:', error);
   updateScoreDisplay();
   renderAll();
   toast(player.name + ': ' + (action === 'try' ? 'Try scored! 🏉' : 'Tag logged!'));
 }
 
-// FIX: async — syncs deletions back to Supabase
 async function deleteLogEntry(id) {
   id = Number(id);
   const entry = state.matchLog.find(e => e.id === id);
   if (!entry) return;
-
   const player = state.players.find(p => p.id === entry.playerId);
   if (player) {
     if (entry.action === 'try' && player.tries > 0) player.tries--;
     if (entry.action === 'tag' && player.tags > 0) player.tags--;
-    const { error } = await supabase
-      .from('players')
-      .update({ tries: player.tries, tags: player.tags })
-      .eq('id', player.id);
-    if (error) console.error('deleteLogEntry save error:', error);
+    await supabase.from('players').update({ tries: player.tries, tags: player.tags }).eq('id', player.id);
   }
-
   state.matchLog = state.matchLog.filter(e => e.id !== id);
   updateScoreDisplay();
   renderAll();
@@ -494,17 +451,16 @@ async function deleteLogEntry(id) {
 // ═══ TEAM HUB ═══
 function NextMatch() {
   state.nextMatch = {
-    date: document.getElementById('nmDate').value,
-    time: document.getElementById('nmTime').value,
-    venue: document.getElementById('nmVenue').value,
-    oppo: document.getElementById('nmOppo').value
+    date:  document.getElementById('nmDate')  ? document.getElementById('nmDate').value  : '',
+    time:  document.getElementById('nmTime')  ? document.getElementById('nmTime').value  : '',
+    venue: document.getElementById('nmVenue') ? document.getElementById('nmVenue').value : '',
+    oppo:  document.getElementById('nmOppo')  ? document.getElementById('nmOppo').value  : ''
   };
-  renderAll();
   toast('Next match saved!');
 }
 
 function shareStatusLink() {
-  const text = 'Oztag IQ Live — Home ' + getTries() + ' – ' + (state.awayTries || 0) + ' Away | Time: ' + getTimeStr();
+  const text = 'Oztag IQ Live — Home ' + getTries() + ' – ' + (state.awayTries||0) + ' Away | Time: ' + getTimeStr();
   if (navigator.clipboard) navigator.clipboard.writeText(text);
   toast('Status copied to clipboard!');
 }
@@ -516,59 +472,52 @@ function changeAwayTries(delta) {
 }
 
 // ═══ HELPERS ═══
-function getTries() { return state.players.reduce((s, p) => s + (p.tries || 0), 0); }
-function getTags() { return state.players.reduce((s, p) => s + (p.tags || 0), 0); }
-function getTimeStr() {
-  const m = Math.floor(state.timerSeconds / 60).toString().padStart(2, '0');
-  const s = (state.timerSeconds % 60).toString().padStart(2, '0');
-  return m + ':' + s;
-}
+function getTries()  { return state.players.reduce((s,p) => s + (p.tries||0), 0); }
+function getTags()   { return state.players.reduce((s,p) => s + (p.tags||0),  0); }
+function getTimeStr(){ const m=Math.floor(state.timerSeconds/60).toString().padStart(2,'0'); const s=(state.timerSeconds%60).toString().padStart(2,'0'); return m+':'+s; }
 
 // ═══ TOAST ═══
 let toastTimeout;
 function toast(msg) {
   const el = document.getElementById('toast');
+  if (!el) return;
   el.textContent = msg;
   el.classList.add('show');
   clearTimeout(toastTimeout);
   toastTimeout = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
-// ═══ RENDER ═══
+// ═══ RENDER — every function is null-safe ═══
 function renderAll() {
-  renderRoster();
-  renderPlayerTapGrid();
-  renderMatchLog();
-  renderLiveStats();
-  renderStandings();
-  renderSidelineWatch();
-  renderSeasonSummary();
-  updateScoreDisplay();
+  try { renderRoster(); }        catch(e) { console.error('renderRoster:', e); }
+  try { renderPlayerTapGrid(); } catch(e) { console.error('renderPlayerTapGrid:', e); }
+  try { renderMatchLog(); }      catch(e) { console.error('renderMatchLog:', e); }
+  try { renderLiveStats(); }     catch(e) { console.error('renderLiveStats:', e); }
+  try { renderStandings(); }     catch(e) { console.error('renderStandings:', e); }
+  try { renderSidelineWatch(); } catch(e) { console.error('renderSidelineWatch:', e); }
+  try { renderSeasonSummary(); } catch(e) { console.error('renderSeasonSummary:', e); }
+  try { updateScoreDisplay(); }  catch(e) { console.error('updateScoreDisplay:', e); }
 }
 
 function renderRoster() {
-  const el = document.getElementById('rosterList');
-  if (!el) return;
+  const el = document.getElementById('rosterList'); if (!el) return;
   if (state.players.length === 0) {
-    el.innerHTML = '<li style="padding:.75rem;color:#444;font-family:var(--font-m);font-size:.75rem;text-align:center;">No players yet — add your squad!</li>';
-    return;
+    el.innerHTML = '<li style="padding:.75rem;color:#444;font-family:var(--font-m);font-size:.75rem;text-align:center;">No players yet — add your squad!</li>'; return;
   }
   el.innerHTML = state.players.map(p => `
     <li class="roster-item">
       <span class="roster-name">${p.name}</span>
       <div class="roster-actions">
-        <span style="color:#555;font-size:.65rem;">${p.tries || 0}T ${p.tags || 0}Tg</span>
+        <span style="color:#555;font-size:.65rem;">${p.tries||0}T ${p.tags||0}Tg</span>
         <button class="icon-btn danger" onclick="removePlayer(${p.id})">✕</button>
       </div>
     </li>`).join('');
 }
 
 function renderPlayerTapGrid() {
-  const el = document.getElementById('playerTapGrid');
-  if (!el) return;
+  const el = document.getElementById('playerTapGrid'); if (!el) return;
   if (state.players.length === 0) {
-    el.innerHTML = '<span style="font-family:var(--font-m);font-size:.75rem;color:#444;">Add players to your roster first</span>';
-    return;
+    el.innerHTML = '<span style="font-family:var(--font-m);font-size:.75rem;color:#444;">Add players to your roster first</span>'; return;
   }
   el.innerHTML = state.players.map(p => `
     <button class="player-tap ${state.selectedPlayer === p.id ? 'selected' : ''}" onclick="selectPlayer(${p.id})">${p.name}</button>
@@ -576,136 +525,113 @@ function renderPlayerTapGrid() {
 }
 
 function renderMatchLog() {
-  const el = document.getElementById('matchLogScroll');
-  if (!el) return;
+  const el = document.getElementById('matchLogScroll'); if (!el) return;
   if (state.matchLog.length === 0) {
-    el.innerHTML = '<div style="text-align:center;padding:2rem;color:#444;font-family:var(--font-m);font-size:.75rem;">No events yet — start the timer and log!</div>';
-    return;
+    el.innerHTML = '<div style="text-align:center;padding:2rem;color:#444;font-family:var(--font-m);font-size:.75rem;">No events yet — start the timer and log!</div>'; return;
   }
   el.innerHTML = state.matchLog.map(e => `
     <div class="log-entry">
       <span class="log-time">${e.time}</span>
       <span class="log-player">${e.player}</span>
-      <span class="log-action-badge ${e.action === 'try' ? 'badge-try' : 'badge-tag'}">${e.action === 'try' ? 'TRY' : 'TAG'}</span>
+      <span class="log-action-badge ${e.action==='try'?'badge-try':'badge-tag'}">${e.action==='try'?'TRY':'TAG'}</span>
       <button class="log-del" onclick="deleteLogEntry(${e.id})" title="Remove">✕</button>
     </div>`).join('');
 }
 
 function renderLiveStats() {
-  const tries = getTries();
-  const tags = getTags();
-  const events = state.matchLog.length;
+  const tries = getTries(), tags = getTags();
   const activePlayers = state.players.filter(p => p.tries > 0 || p.tags > 0).length;
-  const set = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
-  set('statTries', tries);
-  set('statTags', tags);
-  set('statPlayers', activePlayers);
-  set('statEvents', events);
-  set('heroTries', tries);
-  set('heroTags', tags);
-  set('heroHome', tries);
-  const sorted = [...state.players].sort((a, b) => (b.tries || 0) - (a.tries || 0));
-  set('heroTopScorer', sorted.length && sorted[0].tries > 0 ? sorted[0].name + ' · ' + sorted[0].tries + ' tries' : '—');
+  setEl('statTries', tries); setEl('statTags', tags);
+  setEl('statPlayers', activePlayers); setEl('statEvents', state.matchLog.length);
+  setEl('heroTries', tries); setEl('heroTags', tags); setEl('heroHome', tries);
+  const sorted = [...state.players].sort((a,b) => (b.tries||0)-(a.tries||0));
+  setEl('heroTopScorer', sorted.length && sorted[0].tries > 0 ? sorted[0].name + ' · ' + sorted[0].tries + ' tries' : '—');
   const barsEl = document.getElementById('playerStatBars');
-  if (barsEl && state.players.length > 0) {
-    const maxTries = Math.max(...state.players.map(p => p.tries || 0), 1);
-    barsEl.innerHTML = state.players.filter(p => p.tries > 0 || p.tags > 0).map(p => `
-      <div class="bar-row">
-        <div class="bar-label"><span>${p.name}</span><span>${p.tries || 0} tries · ${p.tags || 0} tags</span></div>
-        <div class="bar-track"><div class="bar-fill" style="width:${Math.round((p.tries || 0) / maxTries * 100)}%"></div></div>
-      </div>`).join('') || '<div style="color:#444;font-size:.75rem;font-family:var(--font-m);">No stats yet</div>';
-  }
-}
-
-function updateScoreDisplay() {
-  const home = getTries();
-  const away = state.awayTries || 0;
-  const el = document.getElementById('scoreDisplay'); if (el) el.textContent = 'Home ' + home + ' – ' + away + ' Away';
-  const hd = document.getElementById('homeScoreDisplay'); if (hd) hd.textContent = home;
-  const ad = document.getElementById('awayScoreDisplay'); if (ad) ad.textContent = away;
-  const ha = document.getElementById('heroAway'); if (ha) ha.textContent = away;
-  const ws = document.getElementById('watchScore'); if (ws) ws.textContent = home + '–' + away;
-}
-
-function renderStandings() {
-  const el = document.getElementById('standingsBody');
-  if (!el) return;
-  if (state.players.length === 0) {
-    el.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#444;font-family:var(--font-m);font-size:.75rem;">No players yet — add your squad in The App</td></tr>';
-    return;
-  }
-  const sorted = [...state.players].sort((a, b) => ((b.tries || 0) * 2 + (b.tags || 0)) - ((a.tries || 0) * 2 + (a.tags || 0)));
-  const maxTries = Math.max(...state.players.map(x => x.tries || 0));
-  const maxPts = Math.max(...state.players.map(x => (x.tries || 0) * 2 + (x.tags || 0)));
-  el.innerHTML = sorted.map((p, i) => `
-    <tr>
-      <td><div class="player-name">${p.name}${i === 0 && p.tries > 0 ? '<span class="you-badge">TOP</span>' : ''}</div></td>
-      <td>${p.matches || 0}</td>
-      <td class="${(p.tries || 0) === maxTries && p.tries > 0 ? 'stat-highlight' : ''}">${p.tries || 0}</td>
-      <td>${p.tags || 0}</td>
-      <td class="${(p.tries || 0) * 2 + (p.tags || 0) === maxPts && ((p.tries || 0) + (p.tags || 0)) > 0 ? 'stat-highlight' : ''}">${(p.tries || 0) * 2 + (p.tags || 0)}</td>
-    </tr>`).join('');
-}
-
-function renderSidelineWatch() {
-  const tries = getTries();
-  const tags = getTags();
-  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-  set('watchScore', tries + '–' + (state.awayTries || 0));
-  set('watchTries', tries);
-  set('watchTags', tags);
-  set('watchPlayers', state.players.length);
-  set('watchLabel', state.matchActive ? 'Live Match' : 'Ready');
-  const el = document.getElementById('sidelinePlayerList');
-  if (el) {
-    const active = [...state.players].filter(p => p.tries > 0 || p.tags > 0).sort((a, b) => (b.tries || 0) - (a.tries || 0));
-    el.innerHTML = active.length === 0
-      ? '<div style="color:#444;font-size:.75rem;">No match data yet — go log some tries!</div>'
-      : active.map(p => `
-        <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid #111;font-family:var(--font-m);font-size:.75rem;">
-          <span>${p.name}</span><span style="color:var(--green);">${p.tries || 0}T ${p.tags || 0}Tg</span>
+  if (barsEl) {
+    const maxTries = Math.max(...state.players.map(p=>p.tries||0), 1);
+    const active = state.players.filter(p=>p.tries>0||p.tags>0);
+    barsEl.innerHTML = active.length === 0
+      ? '<div style="color:#444;font-size:.75rem;font-family:var(--font-m);">No stats yet</div>'
+      : active.map(p=>`
+        <div class="bar-row">
+          <div class="bar-label"><span>${p.name}</span><span>${p.tries||0} tries · ${p.tags||0} tags</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round((p.tries||0)/maxTries*100)}%"></div></div>
         </div>`).join('');
   }
 }
 
+function updateScoreDisplay() {
+  const home = getTries(), away = state.awayTries || 0;
+  setEl('scoreDisplay', 'Home ' + home + ' – ' + away + ' Away');
+  setEl('homeScoreDisplay', home); setEl('awayScoreDisplay', away);
+  setEl('heroAway', away); setEl('watchScore', home + '–' + away);
+}
+
+function renderStandings() {
+  const el = document.getElementById('standingsBody'); if (!el) return;
+  if (state.players.length === 0) {
+    el.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#444;font-family:var(--font-m);font-size:.75rem;">No players yet — add your squad in The App</td></tr>'; return;
+  }
+  const sorted = [...state.players].sort((a,b)=>((b.tries||0)*2+(b.tags||0))-((a.tries||0)*2+(a.tags||0)));
+  const maxTries = Math.max(...state.players.map(x=>x.tries||0));
+  const maxPts   = Math.max(...state.players.map(x=>(x.tries||0)*2+(x.tags||0)));
+  el.innerHTML = sorted.map((p,i)=>`
+    <tr>
+      <td><div class="player-name">${p.name}${i===0&&p.tries>0?'<span class="you-badge">TOP</span>':''}</div></td>
+      <td>${p.matches||0}</td>
+      <td class="${(p.tries||0)===maxTries&&p.tries>0?'stat-highlight':''}">${p.tries||0}</td>
+      <td>${p.tags||0}</td>
+      <td class="${(p.tries||0)*2+(p.tags||0)===maxPts&&((p.tries||0)+(p.tags||0))>0?'stat-highlight':''}">${(p.tries||0)*2+(p.tags||0)}</td>
+    </tr>`).join('');
+}
+
+function renderSidelineWatch() {
+  const tries = getTries(), tags = getTags();
+  setEl('watchTries', tries); setEl('watchTags', tags);
+  setEl('watchPlayers', state.players.length);
+  setEl('watchLabel', state.matchActive ? 'Live Match' : 'Ready');
+  const el = document.getElementById('sidelinePlayerList');
+  if (el) {
+    const active = [...state.players].filter(p=>p.tries>0||p.tags>0).sort((a,b)=>(b.tries||0)-(a.tries||0));
+    el.innerHTML = active.length===0
+      ? '<div style="color:#444;font-size:.75rem;">No match data yet — go log some tries!</div>'
+      : active.map(p=>`<div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid #111;font-family:var(--font-m);font-size:.75rem;"><span>${p.name}</span><span style="color:var(--green);">${p.tries||0}T ${p.tags||0}Tg</span></div>`).join('');
+  }
+}
+
 function renderSeasonSummary() {
-  const allTries = state.players.reduce((s, p) => s + (p.tries || 0), 0);
-  const allTags = state.players.reduce((s, p) => s + (p.tags || 0), 0);
-  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-  set('seasonTries', allTries);
-  set('seasonTags', allTags);
+  const allTries = state.players.reduce((s,p)=>s+(p.tries||0),0);
+  const allTags  = state.players.reduce((s,p)=>s+(p.tags||0),0);
+  setEl('seasonTries', allTries); setEl('seasonTags', allTags);
   const barsEl = document.getElementById('seasonBars');
-  if (barsEl && state.players.length > 0) {
-    const maxTries = Math.max(...state.players.map(p => p.tries || 0), 1);
-    barsEl.innerHTML = state.players.filter(p => p.tries > 0).map(p => `
-      <div class="bar-row">
-        <div class="bar-label"><span>${p.name}</span><span>${p.tries || 0} tries</span></div>
-        <div class="bar-track"><div class="bar-fill" style="width:${Math.round((p.tries || 0) / maxTries * 100)}%"></div></div>
-      </div>`).join('') || '<div style="color:#444;font-size:.75rem;font-family:var(--font-m);">No tries logged yet</div>';
+  if (barsEl) {
+    const maxTries = Math.max(...state.players.map(p=>p.tries||0),1);
+    const scorers  = state.players.filter(p=>p.tries>0);
+    barsEl.innerHTML = scorers.length===0
+      ? '<div style="color:#444;font-size:.75rem;font-family:var(--font-m);">No tries logged yet</div>'
+      : scorers.map(p=>`
+        <div class="bar-row">
+          <div class="bar-label"><span>${p.name}</span><span>${p.tries||0} tries</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round((p.tries||0)/maxTries*100)}%"></div></div>
+        </div>`).join('');
   }
 }
 
 // ═══ INIT ═══
-if (state.nextMatch) {
-  const fields = ['nmDate', 'nmTime', 'nmVenue', 'nmOppo'];
-  const keys = ['date', 'time', 'venue', 'oppo'];
-  fields.forEach((id, i) => {
-    const el = document.getElementById(id);
-    if (el && state.nextMatch[keys[i]]) el.value = state.nextMatch[keys[i]];
-  });
-}
+// Populate next match fields safely
+['nmDate','nmTime','nmVenue','nmOppo'].forEach((id,i) => {
+  const key = ['date','time','venue','oppo'][i];
+  const el = document.getElementById(id);
+  if (el && state.nextMatch[key]) el.value = state.nextMatch[key];
+});
 
+// Initial render — safe because every render fn checks for element existence
 renderAll();
 updateTimerDisplay();
-document.getElementById('matchStatus').textContent = 'Ready';
-document.getElementById('timerBtn').textContent = 'Start';
 
-// Load players from Supabase on startup
+// Load live data from Supabase
 loadPlayers();
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js', { scope: './' });
-}
 </script>
 </body>
 </html>
