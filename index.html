@@ -262,7 +262,7 @@ if ('serviceWorker' in navigator) {
 // ═══ SUPABASE ═══
 const supabaseUrl = "https://cfvvoseatrylzbrlckie.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmdnZvc2VhdHJ5bHpicmxja2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODEyMTIsImV4cCI6MjA5NTg1NzIxMn0.gJyH6YLWx8Z1Psgif09anY7I_bJQwTadyC4kPBAlA-k";
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+const sbClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 // ═══ STATE ═══
 let state = {
@@ -370,13 +370,13 @@ async function addPlayer(name) {
   if (state.players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
     toast('Player already in squad!'); return;
   }
-  const { error } = await supabase.from('players').insert([{ name, tries: 0, tags: 0, matches: 0 }]);
+  const { error } = await sbClient.from('players').insert([{ name, tries: 0, tags: 0, matches: 0 }]);
   if (error) { console.error('addPlayer:', error); toast('Error adding player'); return; }
   await loadPlayers();
 }
 
 async function loadPlayers() {
-  const { data, error } = await supabase.from('players').select('*').order('id', { ascending: true });
+  const { data, error } = await sbClient.from('players').select('*').order('id', { ascending: true });
   if (error) { console.error('loadPlayers:', error); toast('Failed to load players'); return; }
   state.players = data || [];
   renderAll();
@@ -384,7 +384,7 @@ async function loadPlayers() {
 
 async function removePlayer(id) {
   id = Number(id);
-  const { error } = await supabase.from('players').delete().eq('id', id);
+  const { error } = await sbClient.from('players').delete().eq('id', id);
   if (error) { console.error('removePlayer:', error); toast('Error removing player'); return; }
   if (state.selectedPlayer === id) {
     state.selectedPlayer = null;
@@ -426,7 +426,7 @@ async function logAction(action) {
   state.matchLog.unshift({ id: Date.now(), time: m+':'+s, player: player.name, playerId: player.id, action });
   if (action === 'try') player.tries++;
   if (action === 'tag') player.tags++;
-  const { error } = await supabase.from('players').update({ tries: player.tries, tags: player.tags }).eq('id', player.id);
+  const { error } = await sbClient.from('players').update({ tries: player.tries, tags: player.tags }).eq('id', player.id);
   if (error) console.error('logAction save:', error);
   updateScoreDisplay();
   renderAll();
@@ -441,7 +441,7 @@ async function deleteLogEntry(id) {
   if (player) {
     if (entry.action === 'try' && player.tries > 0) player.tries--;
     if (entry.action === 'tag' && player.tags > 0) player.tags--;
-    await supabase.from('players').update({ tries: player.tries, tags: player.tags }).eq('id', player.id);
+    await sbClient.from('players').update({ tries: player.tries, tags: player.tags }).eq('id', player.id);
   }
   state.matchLog = state.matchLog.filter(e => e.id !== id);
   updateScoreDisplay();
