@@ -8,74 +8,103 @@
 <link rel="stylesheet" href="./style.css">
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#b8ff57">
+<style>
+  /* ── AUTH SCREEN ── */
+  #authScreen {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #0a0a0a;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-m, 'DM Sans', sans-serif);
+  }
+  #authScreen.hidden { display: none; }
+  .auth-box {
+    background: #111; border: 1px solid #222; border-radius: 1.2rem;
+    padding: 2.5rem 2rem; width: 100%; max-width: 380px;
+    display: flex; flex-direction: column; gap: 1.2rem;
+  }
+  .auth-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.4rem; color: #b8ff57; letter-spacing: 3px;
+    text-align: center; margin-bottom: .25rem;
+  }
+  .auth-sub { text-align:center; color:#555; font-size:.8rem; margin-top:-.5rem; }
+  .auth-tabs { display:flex; gap:.5rem; }
+  .auth-tab {
+    flex:1; padding:.6rem; border-radius:.6rem; border:1px solid #222;
+    background:transparent; color:#555; font-family:var(--font-m,'DM Sans',sans-serif);
+    font-size:.8rem; letter-spacing:1px; cursor:pointer; text-transform:uppercase;
+    transition: all .2s;
+  }
+  .auth-tab.active { background:#b8ff57; color:#0a0a0a; border-color:#b8ff57; font-weight:600; }
+  .auth-input {
+    width:100%; padding:.75rem 1rem; border-radius:.7rem;
+    border:1px solid #222; background:#0a0a0a; color:#fff;
+    font-family:var(--font-m,'DM Sans',sans-serif); font-size:.9rem;
+    outline:none; box-sizing:border-box; transition: border-color .2s;
+  }
+  .auth-input:focus { border-color:#b8ff57; }
+  .auth-btn {
+    width:100%; padding:.85rem; border-radius:.7rem; border:none;
+    background:#b8ff57; color:#0a0a0a; font-family:'Bebas Neue',sans-serif;
+    font-size:1.1rem; letter-spacing:2px; cursor:pointer;
+    transition: opacity .2s;
+  }
+  .auth-btn:hover { opacity:.88; }
+  .auth-btn:disabled { opacity:.4; cursor:not-allowed; }
+  .auth-err { color:#ff7a5a; font-size:.78rem; text-align:center; min-height:1rem; }
+  .auth-divider { border:none; border-top:1px solid #1e1e1e; margin:.25rem 0; }
+
+  /* ── NAV USER BADGE ── */
+  .nav-user {
+    display:flex; align-items:center; gap:.75rem;
+    font-family:var(--font-m,'DM Sans',sans-serif); font-size:.75rem; color:#555;
+  }
+  .nav-team { color:#b8ff57; font-weight:600; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .nav-logout {
+    padding:.35rem .75rem; border-radius:.5rem; border:1px solid #222;
+    background:transparent; color:#555; font-family:var(--font-m,'DM Sans',sans-serif);
+    font-size:.7rem; cursor:pointer; letter-spacing:1px; text-transform:uppercase;
+    transition: all .2s;
+  }
+  .nav-logout:hover { border-color:#ff7a5a; color:#ff7a5a; }
+</style>
 </head>
 <body>
 
-<nav>
-  <span class="nav-logo" onclick="showPage('home')">OZTAG IQ</span>
-  <ul class="nav-links">
-    <li><a onclick="showPage('home')" id="nav-home" class="active">Home</a></li>
-    <li><a onclick="showPage('app')" id="nav-app">The App</a></li>
-    <li><a onclick="showPage('sideline')" id="nav-sideline">Sideline</a></li>
-    <li><a onclick="showPage('teamhub')" id="nav-teamhub">Team Hub</a></li>
-  </ul>
-</nav>
-
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
-
-<!-- ADD PLAYER MODAL -->
-<div class="modal-overlay hidden" id="addPlayerModal">
-  <div class="modal">
-    <h3>ADD PLAYER</h3>
-    <input class="text-input modal-input" id="newPlayerName" placeholder="Player name..." />
-    <div class="modal-actions">
-      <button class="btn btn-secondary btn-small" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary btn-small" onclick="confirmAddPlayer()">Add Player</button>
+<!-- AUTH SCREEN -->
+<div id="authScreen">
+  <div class="auth-box">
+    <div class="auth-logo">OZTAG IQ</div>
+    <div class="auth-sub">Sign in to access your team</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Login</button>
+      <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">Sign Up</button>
     </div>
+    <input class="auth-input" id="authEmail" type="email" placeholder="Team email address..." />
+    <input class="auth-input" id="authPassword" type="password" placeholder="Password..." />
+    <input class="auth-input hidden" id="authTeamName" type="text" placeholder="Team name (e.g. Thunder Taggers)..." />
+    <div class="auth-err" id="authErr"></div>
+    <button class="auth-btn" id="authSubmitBtn" onclick="handleAuth()">Login</button>
   </div>
 </div>
 
-<!-- HOME -->
-<div id="home" class="page active">
-  <section class="hero">
-    <div class="hero-content">
-      <div class="hero-eyebrow">Ultimate Oztag Companion</div>
-      <h1 class="hero-title">OZTAG<br><span>IQ</span></h1>
-      <p class="hero-sub">The ultimate app for your team and the field. Real-time stats, match logging, sideline scores, and team insights — all in one place.</p>
-      <div class="hero-buttons">
-        <button class="btn btn-primary" onclick="showPage('app')">Get Started</button>
-        <button class="btn btn-secondary" onclick="showPage('teamhub')">Go To Team Hub</button>
-      </div>
-      <div class="hero-pills">
-        <span class="pill">One-Tap Logging</span>
-        <span class="pill">Live Scores</span>
-        <span class="pill">Wrist Stats</span>
-        <span class="pill">Team Standings</span>
-      </div>
-    </div>
-    <div class="hero-visual">
-      <div class="phone-wrap">
-        <div class="phone">
-          <div class="phone-screen">
-            <div class="phone-score-header"><div class="game-label" id="heroGameLabel">Ready</div></div>
-            <div class="score-row"><span class="score-team">HOME</span><span class="score-num" id="heroHome">0</span></div>
-            <div class="score-row"><span class="score-team">AWAY</span><span class="score-num" id="heroAway">0</span></div>
-            <div class="phone-stats">
-              <div class="stat-row"><span>Tries</span><span id="heroTries">0</span></div>
-              <div class="stat-row"><span>Tags</span><span id="heroTags">0</span></div>
-              <div class="stat-row"><span>Top Scorer</span><span id="heroTopScorer">—</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-  <footer><span class="logo">OZTAG IQ</span><span>© 2025 Oztag IQ · For teams, by players</span></footer>
-</div>
+<nav>
+  <span class="nav-logo" onclick="showPage('app')">OZTAG IQ</span>
+  <ul class="nav-links">
+    <li><a onclick="showPage('app')" id="nav-app" class="active">The App</a></li>
+    <li><a onclick="showPage('sideline')" id="nav-sideline">Sideline</a></li>
+    <li><a onclick="showPage('teamhub')" id="nav-teamhub">Team Hub</a></li>
+  </ul>
+  <div class="nav-user">
+    <span class="nav-team" id="navTeamName"></span>
+    <button class="nav-logout" onclick="handleLogout()">Logout</button>
+  </div>
+</nav>
+
+<div class="toast" id="toast"></div>
 
 <!-- THE APP -->
-<div id="app" class="page">
+<div id="app" class="page active">
   <div class="section-header">
     <div class="section-label">Match Day</div>
     <h2 class="section-title">LOG THE<br><span>GAME.</span></h2>
@@ -135,7 +164,7 @@
       </div>
       <div class="app-panel">
         <div class="panel-title">LIVE STATS</div>
-        <div class="stats-grid" id="liveStatsGrid">
+        <div class="stats-grid">
           <div class="stat-card"><div class="stat-val" id="statTries">0</div><div class="stat-lbl">Total Tries</div></div>
           <div class="stat-card"><div class="stat-val" id="statTags">0</div><div class="stat-lbl">Total Tags</div></div>
           <div class="stat-card"><div class="stat-val" id="statPlayers">0</div><div class="stat-lbl">Active Players</div></div>
@@ -171,27 +200,9 @@
       </div>
     </div>
     <div class="sideline-features">
-      <div class="sl-feature">
-        <div class="sl-icon">👁️</div>
-        <div>
-          <h3>Keep Your Eyes on the Game</h3>
-          <p>The compact SmartWatch UI shows score, tries, and tag contributions at a glance — no need to look down at your phone.</p>
-        </div>
-      </div>
-      <div class="sl-feature">
-        <div class="sl-icon">📳</div>
-        <div>
-          <h3>Haptic Feedback</h3>
-          <p>Your watch taps you when a try is scored. Feel the game unfold without breaking focus from the field.</p>
-        </div>
-      </div>
-      <div class="sl-feature">
-        <div class="sl-icon">🔄</div>
-        <div>
-          <h3>Live Squad Scroll</h3>
-          <p>The watch display reflects your real squad and live match data from the App page in real time.</p>
-        </div>
-      </div>
+      <div class="sl-feature"><div class="sl-icon">👁️</div><div><h3>Keep Your Eyes on the Game</h3><p>The compact SmartWatch UI shows score, tries, and tag contributions at a glance.</p></div></div>
+      <div class="sl-feature"><div class="sl-icon">📳</div><div><h3>Haptic Feedback</h3><p>Your watch taps you when a try is scored.</p></div></div>
+      <div class="sl-feature"><div class="sl-icon">🔄</div><div><h3>Live Squad Scroll</h3><p>Reflects your real squad and live match data in real time.</p></div></div>
       <div class="app-panel" style="margin-top:0;">
         <div class="panel-title">TOP PLAYERS (LIVE)</div>
         <div id="sidelinePlayerList" style="font-family:var(--font-m);font-size:.8rem;color:#666;">No match data yet — go log some tries!</div>
@@ -216,11 +227,7 @@
       </div>
     </div>
     <table class="standings-table">
-      <thead>
-        <tr>
-          <th>Player</th><th>Matches</th><th>Tries</th><th>Tags</th><th>Pts Contribution</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Player</th><th>Matches</th><th>Tries</th><th>Tags</th><th>Pts Contribution</th></tr></thead>
       <tbody id="standingsBody"></tbody>
     </table>
     <div class="hub-bottom-cards">
@@ -228,12 +235,12 @@
         <h3>NEXT MATCH</h3>
         <p>Your next scheduled game</p>
         <div class="next-match-details">
-          <div class="match-detail-row"><span>Date</span><input id="nmDate" value="Saturday 14 Jun" /></div>
-          <div class="match-detail-row"><span>Time</span><input id="nmTime" value="9:00 AM" /></div>
-          <div class="match-detail-row"><span>Venue</span><input id="nmVenue" value="Field 3, North Oval" /></div>
-          <div class="match-detail-row"><span>Opposition</span><input id="nmOppo" value="Thunder Taggers" /></div>
+          <div class="match-detail-row"><span>Date</span><input id="nmDate" placeholder="e.g. Saturday 14 Jun" /></div>
+          <div class="match-detail-row"><span>Time</span><input id="nmTime" placeholder="e.g. 9:00 AM" /></div>
+          <div class="match-detail-row"><span>Venue</span><input id="nmVenue" placeholder="e.g. Field 3, North Oval" /></div>
+          <div class="match-detail-row"><span>Opposition</span><input id="nmOppo" placeholder="e.g. Thunder Taggers" /></div>
         </div>
-        <button class="btn btn-secondary btn-small" style="margin-top:1rem;width:100%;" onclick="NextMatch()">Save Details</button>
+        <button class="btn btn-secondary btn-small" style="margin-top:1rem;width:100%;" onclick="saveNextMatch()">Save Details</button>
       </div>
       <div class="hub-card">
         <h3>SEASON SUMMARY</h3>
@@ -252,52 +259,112 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 
-// Nuke any stale service worker caches immediately
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(r => r.unregister());
-  });
+  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
 }
 
 // ═══ SUPABASE ═══
-const supabaseUrl = "https://cfvvoseatrylzbrlckie.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmdnZvc2VhdHJ5bHpicmxja2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODEyMTIsImV4cCI6MjA5NTg1NzIxMn0.gJyH6YLWx8Z1Psgif09anY7I_bJQwTadyC4kPBAlA-k";
-const sbClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseUrl  = "https://cfvvoseatrylzbrlckie.supabase.co";
+const supabaseKey  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmdnZvc2VhdHJ5bHpicmxja2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODEyMTIsImV4cCI6MjA5NTg1NzIxMn0.gJyH6YLWx8Z1Psgif09anY7I_bJQwTadyC4kPBAlA-k";
+const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 // ═══ STATE ═══
+let currentUser = null;
+let currentTeamName = '';
 let state = {
-  players: [],
-  matchLog: [],
-  timerRunning: false,
-  timerSeconds: 0,
-  selectedPlayer: null,
-  matchActive: false,
-  nextMatch: { date: 'Saturday 14 Jun', time: '9:00 AM', venue: 'Field 3, North Oval', oppo: 'Thunder Taggers' },
-  matchCount: 0,
+  players: [], matchLog: [],
+  currentMatchId: null,
+  timerRunning: false, timerSeconds: 0,
+  selectedPlayer: null, matchActive: false,
   awayTries: 0
 };
 let timerInterval = null;
 
-// ═══ SAFE HELPER — never crashes even if element missing ═══
-function setEl(id, val) {
-  const e = document.getElementById(id);
-  if (e) e.textContent = val;
+// ═══ HELPERS ═══
+function setEl(id, val) { const e = document.getElementById(id); if (e) e.textContent = val; }
+function getTries() { return state.players.reduce((s,p) => s+(p.tries||0), 0); }
+function getTags()  { return state.players.reduce((s,p) => s+(p.tags||0),  0); }
+function getTimeStr() {
+  return String(Math.floor(state.timerSeconds/60)).padStart(2,'0') + ':' + String(state.timerSeconds%60).padStart(2,'0');
+}
+let toastTO;
+function toast(msg) {
+  const el = document.getElementById('toast'); if (!el) return;
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTO); toastTO = setTimeout(() => el.classList.remove('show'), 2200);
+}
+function uid() { return currentUser ? currentUser.id : null; }
+
+// ═══ AUTH ═══
+let authMode = 'login';
+
+function switchTab(mode) {
+  authMode = mode;
+  document.getElementById('tabLogin').classList.toggle('active', mode==='login');
+  document.getElementById('tabSignup').classList.toggle('active', mode==='signup');
+  const teamField = document.getElementById('authTeamName');
+  teamField.classList.toggle('hidden', mode==='login');
+  document.getElementById('authSubmitBtn').textContent = mode==='login' ? 'Login' : 'Create Team Account';
+  document.getElementById('authErr').textContent = '';
 }
 
-// ═══ NAVIGATION — null-safe ═══
-function showPage(id) {
-  try {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
-    const page = document.getElementById(id);
-    const nav  = document.getElementById('nav-' + id);
-    if (page) page.classList.add('active');
-    if (nav)  nav.classList.add('active');
-    window.scrollTo(0, 0);
-    renderAll();
-  } catch(e) {
-    console.error('showPage error:', e);
+async function handleAuth() {
+  const email    = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const teamName = document.getElementById('authTeamName').value.trim();
+  const btn      = document.getElementById('authSubmitBtn');
+  const errEl    = document.getElementById('authErr');
+
+  if (!email || !password) { errEl.textContent = 'Please enter email and password.'; return; }
+  if (authMode === 'signup' && !teamName) { errEl.textContent = 'Please enter your team name.'; return; }
+
+  btn.disabled = true;
+  errEl.textContent = '';
+
+  if (authMode === 'login') {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) { errEl.textContent = error.message; btn.disabled = false; return; }
+    await onSignedIn(data.user);
+  } else {
+    const { data, error } = await sb.auth.signUp({ email, password, options: { data: { team_name: teamName } } });
+    if (error) { errEl.textContent = error.message; btn.disabled = false; return; }
+    if (data.user) {
+      // Create match state row for this team
+      await sb.from('matches').insert([{ user_id: data.user.id, timer_seconds: 0, away_tries: 0, match_active: false }]);
+      // Create next_match row for this team
+      await sb.from('next_match').insert([{ user_id: data.user.id, date: '', time: '', venue: '', oppo: '' }]);
+      await onSignedIn(data.user);
+    } else {
+      errEl.textContent = 'Check your email to confirm your account.';
+      btn.disabled = false;
+    }
   }
+}
+
+async function onSignedIn(user) {
+  currentUser = user;
+  currentTeamName = user.user_metadata?.team_name || user.email;
+  setEl('navTeamName', currentTeamName);
+  document.getElementById('authScreen').classList.add('hidden');
+  await init();
+}
+
+async function handleLogout() {
+  clearInterval(timerInterval);
+  await sb.auth.signOut();
+  currentUser = null;
+  state = { players:[], matchLog:[], currentMatchId:null, timerRunning:false, timerSeconds:0, selectedPlayer:null, matchActive:false, awayTries:0 };
+  document.getElementById('authScreen').classList.remove('hidden');
+  document.getElementById('authSubmitBtn').disabled = false;
+}
+
+// ═══ NAVIGATION ═══
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  const page = document.getElementById(id); if (page) page.classList.add('active');
+  const nav  = document.getElementById('nav-'+id); if (nav) nav.classList.add('active');
+  window.scrollTo(0,0); renderAll();
 }
 
 // ═══ TIMER ═══
@@ -305,277 +372,263 @@ function toggleTimer() {
   if (state.timerRunning) {
     clearInterval(timerInterval);
     state.timerRunning = false;
-    setEl('timerBtn', 'Resume');
-    setEl('matchStatus', 'Paused');
+    setEl('timerBtn','Resume'); setEl('matchStatus','Paused');
   } else {
-    state.matchActive = true;
-    state.timerRunning = true;
-    setEl('timerBtn', 'Pause');
-    setEl('matchStatus', 'Live');
-    timerInterval = setInterval(() => { state.timerSeconds++; updateTimerDisplay(); }, 1000);
+    state.matchActive = true; state.timerRunning = true;
+    setEl('timerBtn','Pause'); setEl('matchStatus','Live');
+    timerInterval = setInterval(() => { state.timerSeconds++; updateTimerDisplay(); scheduleMatchSave(); }, 1000);
   }
-  updateTimerDisplay();
+  persistMatchState(); updateTimerDisplay();
 }
 
 function resetTimer() {
   clearInterval(timerInterval);
-  state.timerRunning = false;
-  state.timerSeconds = 0;
-  setEl('timerBtn', 'Start');
-  setEl('matchStatus', 'Ready');
-  updateTimerDisplay();
+  state.timerRunning = false; state.timerSeconds = 0;
+  setEl('timerBtn','Start'); setEl('matchStatus','Ready');
+  persistMatchState(); updateTimerDisplay();
 }
 
-function resetMatch() {
-  if (!confirm('Start a new match? This will save current stats to season totals and reset the log.')) return;
+async function resetMatch() {
+  if (!confirm('Start a new match? Current stats will be saved to season totals and the log will reset.')) return;
   clearInterval(timerInterval);
-  state.players.forEach(p => { if (p.tries > 0 || p.tags > 0) p.matches = (p.matches || 0) + 1; });
-  state.matchCount++;
-  state.matchLog = [];
-  state.timerRunning = false;
-  state.timerSeconds = 0;
-  state.matchActive = false;
-  state.selectedPlayer = null;
-  state.awayTries = 0;
-  setEl('timerBtn', 'Start');
-  setEl('matchStatus', 'Ready');
-  const tb = document.getElementById('tryBtn'); if (tb) tb.disabled = true;
-  const tg = document.getElementById('tagBtn'); if (tg) tg.disabled = true;
-  updateTimerDisplay();
-  renderAll();
-  toast('New match started!');
+  const updates = [];
+  state.players.forEach(p => {
+    if ((p.tries||0)>0||(p.tags||0)>0) {
+      p.matches = (p.matches||0)+1;
+      updates.push(sb.from('players').update({ matches: p.matches }).eq('id', p.id));
+    }
+  });
+  await Promise.all(updates);
+  if (state.currentMatchId) await sb.from('match_log').delete().eq('match_id', state.currentMatchId);
+  state.timerRunning = false; state.timerSeconds = 0; state.matchActive = false;
+  state.awayTries = 0; state.matchLog = []; state.selectedPlayer = null;
+  await persistMatchState();
+  setEl('timerBtn','Start'); setEl('matchStatus','Ready');
+  ['tryBtn','tagBtn'].forEach(id => { const b=document.getElementById(id); if(b) b.disabled=true; });
+  updateTimerDisplay(); renderAll(); toast('New match started!');
 }
 
 function updateTimerDisplay() {
-  const m = Math.floor(state.timerSeconds / 60).toString().padStart(2, '0');
-  const s = (state.timerSeconds % 60).toString().padStart(2, '0');
-  const str = m + ':' + s;
-  setEl('matchTimer', str);
-  setEl('watchTime', str);
-  setEl('heroGameLabel', state.matchActive ? 'Live · ' + str : 'Ready');
+  const s = getTimeStr();
+  setEl('matchTimer',s); setEl('watchTime',s);
+}
+
+// ═══ PERSIST MATCH STATE (debounced) ═══
+let saveMatchTO = null;
+function scheduleMatchSave() { clearTimeout(saveMatchTO); saveMatchTO = setTimeout(persistMatchState, 2000); }
+async function persistMatchState() {
+  if (!state.currentMatchId) return;
+  await sb.from('matches').update({
+    timer_seconds: state.timerSeconds,
+    away_tries: state.awayTries,
+    match_active: state.matchActive
+  }).eq('id', state.currentMatchId);
 }
 
 // ═══ PLAYERS ═══
 function quickAddPlayer() {
-  const inp = document.getElementById('quickAddInput');
-  if (!inp) return;
-  const name = inp.value.trim();
-  if (!name) return;
-  addPlayer(name);
-  inp.value = '';
+  const inp = document.getElementById('quickAddInput'); if (!inp) return;
+  const name = inp.value.trim(); if (!name) return;
+  addPlayer(name); inp.value='';
 }
-
 async function addPlayer(name) {
-  if (!name) return;
-  if (state.players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
-    toast('Player already in squad!'); return;
-  }
-  const { error } = await sbClient.from('players').insert([{ name, tries: 0, tags: 0, matches: 0 }]);
-  if (error) { console.error('addPlayer:', error); toast('Error adding player'); return; }
+  if (!name||!uid()) return;
+  if (state.players.find(p=>p.name.toLowerCase()===name.toLowerCase())) { toast('Player already in squad!'); return; }
+  const { error } = await sb.from('players').insert([{ user_id: uid(), name, tries:0, tags:0, matches:0 }]);
+  if (error) { console.error(error); toast('Error adding player'); return; }
   await loadPlayers();
 }
-
 async function loadPlayers() {
-  const { data, error } = await sbClient.from('players').select('*').order('id', { ascending: true });
-  if (error) { console.error('loadPlayers:', error); toast('Failed to load players'); return; }
-  state.players = data || [];
-  renderAll();
+  const { data, error } = await sb.from('players').select('*').eq('user_id', uid()).order('id',{ascending:true});
+  if (error) { console.error(error); return; }
+  state.players = data||[]; renderAll();
 }
-
 async function removePlayer(id) {
-  id = Number(id);
-  const { error } = await sbClient.from('players').delete().eq('id', id);
-  if (error) { console.error('removePlayer:', error); toast('Error removing player'); return; }
-  if (state.selectedPlayer === id) {
-    state.selectedPlayer = null;
-    const tb = document.getElementById('tryBtn'); if (tb) tb.disabled = true;
-    const tg = document.getElementById('tagBtn'); if (tg) tg.disabled = true;
+  id=Number(id);
+  await sb.from('players').delete().eq('id',id);
+  if (state.selectedPlayer===id) {
+    state.selectedPlayer=null;
+    ['tryBtn','tagBtn'].forEach(bid=>{ const b=document.getElementById(bid); if(b) b.disabled=true; });
   }
-  state.players = state.players.filter(p => p.id !== id);
-  renderAll();
-}
-
-function confirmAddPlayer() {
-  const inp = document.getElementById('newPlayerName');
-  if (!inp) return;
-  const name = inp.value.trim();
-  if (name) { addPlayer(name); closeModal(); inp.value = ''; }
-}
-
-function closeModal() {
-  const m = document.getElementById('addPlayerModal');
-  if (m) m.classList.add('hidden');
+  state.players = state.players.filter(p=>p.id!==id); renderAll();
 }
 
 // ═══ MATCH LOGGING ═══
 function selectPlayer(id) {
-  id = Number(id);
-  state.selectedPlayer = state.selectedPlayer === id ? null : id;
+  id=Number(id);
+  state.selectedPlayer = state.selectedPlayer===id ? null : id;
   renderPlayerTapGrid();
-  const disabled = state.selectedPlayer === null;
-  const tb = document.getElementById('tryBtn'); if (tb) tb.disabled = disabled;
-  const tg = document.getElementById('tagBtn'); if (tg) tg.disabled = disabled;
+  const dis = state.selectedPlayer===null;
+  ['tryBtn','tagBtn'].forEach(bid=>{ const b=document.getElementById(bid); if(b) b.disabled=dis; });
 }
-
 async function logAction(action) {
   if (!state.selectedPlayer) return;
-  const player = state.players.find(p => p.id === state.selectedPlayer);
-  if (!player) return;
-  const m = Math.floor(state.timerSeconds / 60).toString().padStart(2, '0');
-  const s = (state.timerSeconds % 60).toString().padStart(2, '0');
-  state.matchLog.unshift({ id: Date.now(), time: m+':'+s, player: player.name, playerId: player.id, action });
-  if (action === 'try') player.tries++;
-  if (action === 'tag') player.tags++;
-  const { error } = await sbClient.from('players').update({ tries: player.tries, tags: player.tags }).eq('id', player.id);
-  if (error) console.error('logAction save:', error);
-  updateScoreDisplay();
-  renderAll();
-  toast(player.name + ': ' + (action === 'try' ? 'Try scored! 🏉' : 'Tag logged!'));
+  const player = state.players.find(p=>p.id===state.selectedPlayer); if (!player) return;
+  const timeStr = getTimeStr();
+  const { data: inserted, error } = await sb.from('match_log').insert([{
+    user_id: uid(), match_id: state.currentMatchId,
+    player_id: player.id, player_name: player.name,
+    action, time_str: timeStr
+  }]).select().single();
+  if (error) { console.error(error); toast('Error saving log entry'); return; }
+  state.matchLog.unshift({ id:inserted.id, time:timeStr, player:player.name, playerId:player.id, action });
+  if (action==='try') player.tries++;
+  if (action==='tag') player.tags++;
+  await sb.from('players').update({ tries:player.tries, tags:player.tags }).eq('id',player.id);
+  updateScoreDisplay(); renderAll();
+  toast(player.name+': '+(action==='try'?'Try scored! 🏉':'Tag logged!'));
 }
-
+async function loadMatchLog() {
+  if (!state.currentMatchId) return;
+  const { data, error } = await sb.from('match_log').select('*')
+    .eq('match_id', state.currentMatchId).eq('user_id', uid()).order('id',{ascending:false});
+  if (error) { console.error(error); return; }
+  state.matchLog = (data||[]).map(e=>({ id:e.id, time:e.time_str, player:e.player_name, playerId:e.player_id, action:e.action }));
+}
 async function deleteLogEntry(id) {
-  id = Number(id);
-  const entry = state.matchLog.find(e => e.id === id);
-  if (!entry) return;
-  const player = state.players.find(p => p.id === entry.playerId);
+  id=Number(id);
+  const entry = state.matchLog.find(e=>e.id===id); if (!entry) return;
+  const player = state.players.find(p=>p.id===entry.playerId);
   if (player) {
-    if (entry.action === 'try' && player.tries > 0) player.tries--;
-    if (entry.action === 'tag' && player.tags > 0) player.tags--;
-    await sbClient.from('players').update({ tries: player.tries, tags: player.tags }).eq('id', player.id);
+    if (entry.action==='try'&&player.tries>0) player.tries--;
+    if (entry.action==='tag'&&player.tags>0) player.tags--;
+    await sb.from('players').update({ tries:player.tries, tags:player.tags }).eq('id',player.id);
   }
-  state.matchLog = state.matchLog.filter(e => e.id !== id);
-  updateScoreDisplay();
-  renderAll();
+  await sb.from('match_log').delete().eq('id',id);
+  state.matchLog = state.matchLog.filter(e=>e.id!==id);
+  updateScoreDisplay(); renderAll();
 }
 
-// ═══ TEAM HUB ═══
-function NextMatch() {
-  state.nextMatch = {
-    date:  document.getElementById('nmDate')  ? document.getElementById('nmDate').value  : '',
-    time:  document.getElementById('nmTime')  ? document.getElementById('nmTime').value  : '',
-    venue: document.getElementById('nmVenue') ? document.getElementById('nmVenue').value : '',
-    oppo:  document.getElementById('nmOppo')  ? document.getElementById('nmOppo').value  : ''
+// ═══ MATCH STATE ═══
+async function loadMatchState() {
+  const { data, error } = await sb.from('matches').select('*').eq('user_id', uid()).order('id',{ascending:true}).limit(1).single();
+  if (error||!data) {
+    // Create one if it doesn't exist yet
+    const { data: created } = await sb.from('matches').insert([{ user_id:uid(), timer_seconds:0, away_tries:0, match_active:false }]).select().single();
+    if (created) { state.currentMatchId=created.id; }
+    return;
+  }
+  state.currentMatchId  = data.id;
+  state.timerSeconds    = data.timer_seconds||0;
+  state.awayTries       = data.away_tries||0;
+  state.matchActive     = data.match_active||false;
+  if (state.matchActive) setEl('matchStatus','Paused');
+  updateTimerDisplay();
+}
+
+// ═══ NEXT MATCH ═══
+async function saveNextMatch() {
+  const nm = {
+    date:  (document.getElementById('nmDate')||{}).value||'',
+    time:  (document.getElementById('nmTime')||{}).value||'',
+    venue: (document.getElementById('nmVenue')||{}).value||'',
+    oppo:  (document.getElementById('nmOppo')||{}).value||''
   };
+  // Upsert by user_id
+  const { error } = await sb.from('next_match').upsert([{ user_id: uid(), ...nm }], { onConflict: 'user_id' });
+  if (error) { console.error(error); toast('Error saving next match'); return; }
   toast('Next match saved!');
 }
+async function loadNextMatch() {
+  const { data, error } = await sb.from('next_match').select('*').eq('user_id', uid()).single();
+  if (error||!data) return;
+  const fields = { nmDate:'date', nmTime:'time', nmVenue:'venue', nmOppo:'oppo' };
+  Object.entries(fields).forEach(([elId,key]) => {
+    const el = document.getElementById(elId); if (el) el.value = data[key]||'';
+  });
+}
 
+// ═══ OTHER ═══
 function shareStatusLink() {
-  const text = 'Oztag IQ Live — Home ' + getTries() + ' – ' + (state.awayTries||0) + ' Away | Time: ' + getTimeStr();
+  const text = 'Oztag IQ Live — Home '+getTries()+' – '+state.awayTries+' Away | Time: '+getTimeStr();
   if (navigator.clipboard) navigator.clipboard.writeText(text);
   toast('Status copied to clipboard!');
 }
-
 function changeAwayTries(delta) {
-  state.awayTries = Math.max(0, (state.awayTries || 0) + delta);
-  updateScoreDisplay();
-  if (delta > 0) toast('Away try scored!');
+  state.awayTries = Math.max(0,(state.awayTries||0)+delta);
+  updateScoreDisplay(); scheduleMatchSave();
+  if (delta>0) toast('Away try scored!');
 }
 
-// ═══ HELPERS ═══
-function getTries()  { return state.players.reduce((s,p) => s + (p.tries||0), 0); }
-function getTags()   { return state.players.reduce((s,p) => s + (p.tags||0),  0); }
-function getTimeStr(){ const m=Math.floor(state.timerSeconds/60).toString().padStart(2,'0'); const s=(state.timerSeconds%60).toString().padStart(2,'0'); return m+':'+s; }
-
-// ═══ TOAST ═══
-let toastTimeout;
-function toast(msg) {
-  const el = document.getElementById('toast');
-  if (!el) return;
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => el.classList.remove('show'), 2200);
-}
-
-// ═══ RENDER — every function is null-safe ═══
+// ═══ RENDER ═══
 function renderAll() {
-  try { renderRoster(); }        catch(e) { console.error('renderRoster:', e); }
-  try { renderPlayerTapGrid(); } catch(e) { console.error('renderPlayerTapGrid:', e); }
-  try { renderMatchLog(); }      catch(e) { console.error('renderMatchLog:', e); }
-  try { renderLiveStats(); }     catch(e) { console.error('renderLiveStats:', e); }
-  try { renderStandings(); }     catch(e) { console.error('renderStandings:', e); }
-  try { renderSidelineWatch(); } catch(e) { console.error('renderSidelineWatch:', e); }
-  try { renderSeasonSummary(); } catch(e) { console.error('renderSeasonSummary:', e); }
-  try { updateScoreDisplay(); }  catch(e) { console.error('updateScoreDisplay:', e); }
+  try { renderRoster(); }        catch(e){}
+  try { renderPlayerTapGrid(); } catch(e){}
+  try { renderMatchLog(); }      catch(e){}
+  try { renderLiveStats(); }     catch(e){}
+  try { renderStandings(); }     catch(e){}
+  try { renderSidelineWatch(); } catch(e){}
+  try { renderSeasonSummary(); } catch(e){}
+  try { updateScoreDisplay(); }  catch(e){}
 }
 
 function renderRoster() {
   const el = document.getElementById('rosterList'); if (!el) return;
-  if (state.players.length === 0) {
-    el.innerHTML = '<li style="padding:.75rem;color:#444;font-family:var(--font-m);font-size:.75rem;text-align:center;">No players yet — add your squad!</li>'; return;
-  }
-  el.innerHTML = state.players.map(p => `
-    <li class="roster-item">
-      <span class="roster-name">${p.name}</span>
-      <div class="roster-actions">
-        <span style="color:#555;font-size:.65rem;">${p.tries||0}T ${p.tags||0}Tg</span>
-        <button class="icon-btn danger" onclick="removePlayer(${p.id})">✕</button>
-      </div>
-    </li>`).join('');
+  el.innerHTML = state.players.length===0
+    ? '<li style="padding:.75rem;color:#444;font-family:var(--font-m);font-size:.75rem;text-align:center;">No players yet — add your squad!</li>'
+    : state.players.map(p=>`
+      <li class="roster-item">
+        <span class="roster-name">${p.name}</span>
+        <div class="roster-actions">
+          <span style="color:#555;font-size:.65rem;">${p.tries||0}T ${p.tags||0}Tg</span>
+          <button class="icon-btn danger" onclick="removePlayer(${p.id})">✕</button>
+        </div>
+      </li>`).join('');
 }
 
 function renderPlayerTapGrid() {
   const el = document.getElementById('playerTapGrid'); if (!el) return;
-  if (state.players.length === 0) {
-    el.innerHTML = '<span style="font-family:var(--font-m);font-size:.75rem;color:#444;">Add players to your roster first</span>'; return;
-  }
-  el.innerHTML = state.players.map(p => `
-    <button class="player-tap ${state.selectedPlayer === p.id ? 'selected' : ''}" onclick="selectPlayer(${p.id})">${p.name}</button>
-  `).join('');
+  el.innerHTML = state.players.length===0
+    ? '<span style="font-family:var(--font-m);font-size:.75rem;color:#444;">Add players to your roster first</span>'
+    : state.players.map(p=>`<button class="player-tap ${state.selectedPlayer===p.id?'selected':''}" onclick="selectPlayer(${p.id})">${p.name}</button>`).join('');
 }
 
 function renderMatchLog() {
   const el = document.getElementById('matchLogScroll'); if (!el) return;
-  if (state.matchLog.length === 0) {
-    el.innerHTML = '<div style="text-align:center;padding:2rem;color:#444;font-family:var(--font-m);font-size:.75rem;">No events yet — start the timer and log!</div>'; return;
-  }
-  el.innerHTML = state.matchLog.map(e => `
-    <div class="log-entry">
-      <span class="log-time">${e.time}</span>
-      <span class="log-player">${e.player}</span>
-      <span class="log-action-badge ${e.action==='try'?'badge-try':'badge-tag'}">${e.action==='try'?'TRY':'TAG'}</span>
-      <button class="log-del" onclick="deleteLogEntry(${e.id})" title="Remove">✕</button>
-    </div>`).join('');
+  el.innerHTML = state.matchLog.length===0
+    ? '<div style="text-align:center;padding:2rem;color:#444;font-family:var(--font-m);font-size:.75rem;">No events yet — start the timer and log!</div>'
+    : state.matchLog.map(e=>`
+      <div class="log-entry">
+        <span class="log-time">${e.time}</span>
+        <span class="log-player">${e.player}</span>
+        <span class="log-action-badge ${e.action==='try'?'badge-try':'badge-tag'}">${e.action==='try'?'TRY':'TAG'}</span>
+        <button class="log-del" onclick="deleteLogEntry(${e.id})" title="Remove">✕</button>
+      </div>`).join('');
 }
 
 function renderLiveStats() {
-  const tries = getTries(), tags = getTags();
-  const activePlayers = state.players.filter(p => p.tries > 0 || p.tags > 0).length;
-  setEl('statTries', tries); setEl('statTags', tags);
-  setEl('statPlayers', activePlayers); setEl('statEvents', state.matchLog.length);
-  setEl('heroTries', tries); setEl('heroTags', tags); setEl('heroHome', tries);
-  const sorted = [...state.players].sort((a,b) => (b.tries||0)-(a.tries||0));
-  setEl('heroTopScorer', sorted.length && sorted[0].tries > 0 ? sorted[0].name + ' · ' + sorted[0].tries + ' tries' : '—');
-  const barsEl = document.getElementById('playerStatBars');
+  const tries=getTries(), tags=getTags();
+  setEl('statTries',tries); setEl('statTags',tags);
+  setEl('statPlayers',state.players.filter(p=>p.tries>0||p.tags>0).length);
+  setEl('statEvents',state.matchLog.length);
+  setEl('watchTries',tries); setEl('watchTags',tags); setEl('watchPlayers',state.players.length);
+  const sorted=[...state.players].sort((a,b)=>(b.tries||0)-(a.tries||0));
+  const barsEl=document.getElementById('playerStatBars');
   if (barsEl) {
-    const maxTries = Math.max(...state.players.map(p=>p.tries||0), 1);
-    const active = state.players.filter(p=>p.tries>0||p.tags>0);
-    barsEl.innerHTML = active.length === 0
+    const max=Math.max(...state.players.map(p=>p.tries||0),1);
+    const active=state.players.filter(p=>p.tries>0||p.tags>0);
+    barsEl.innerHTML=active.length===0
       ? '<div style="color:#444;font-size:.75rem;font-family:var(--font-m);">No stats yet</div>'
-      : active.map(p=>`
-        <div class="bar-row">
-          <div class="bar-label"><span>${p.name}</span><span>${p.tries||0} tries · ${p.tags||0} tags</span></div>
-          <div class="bar-track"><div class="bar-fill" style="width:${Math.round((p.tries||0)/maxTries*100)}%"></div></div>
-        </div>`).join('');
+      : active.map(p=>`<div class="bar-row"><div class="bar-label"><span>${p.name}</span><span>${p.tries||0} tries · ${p.tags||0} tags</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.round((p.tries||0)/max*100)}%"></div></div></div>`).join('');
   }
 }
 
 function updateScoreDisplay() {
-  const home = getTries(), away = state.awayTries || 0;
-  setEl('scoreDisplay', 'Home ' + home + ' – ' + away + ' Away');
-  setEl('homeScoreDisplay', home); setEl('awayScoreDisplay', away);
-  setEl('heroAway', away); setEl('watchScore', home + '–' + away);
+  const home=getTries(), away=state.awayTries||0;
+  setEl('scoreDisplay','Home '+home+' – '+away+' Away');
+  setEl('homeScoreDisplay',home); setEl('awayScoreDisplay',away);
+  setEl('watchScore',home+'–'+away);
 }
 
 function renderStandings() {
-  const el = document.getElementById('standingsBody'); if (!el) return;
-  if (state.players.length === 0) {
-    el.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#444;font-family:var(--font-m);font-size:.75rem;">No players yet — add your squad in The App</td></tr>'; return;
+  const el=document.getElementById('standingsBody'); if (!el) return;
+  if (state.players.length===0) {
+    el.innerHTML='<tr><td colspan="5" style="text-align:center;padding:2rem;color:#444;font-family:var(--font-m);font-size:.75rem;">No players yet</td></tr>'; return;
   }
-  const sorted = [...state.players].sort((a,b)=>((b.tries||0)*2+(b.tags||0))-((a.tries||0)*2+(a.tags||0)));
-  const maxTries = Math.max(...state.players.map(x=>x.tries||0));
-  const maxPts   = Math.max(...state.players.map(x=>(x.tries||0)*2+(x.tags||0)));
-  el.innerHTML = sorted.map((p,i)=>`
+  const sorted=[...state.players].sort((a,b)=>((b.tries||0)*2+(b.tags||0))-((a.tries||0)*2+(a.tags||0)));
+  const maxTries=Math.max(...state.players.map(x=>x.tries||0));
+  const maxPts=Math.max(...state.players.map(x=>(x.tries||0)*2+(x.tags||0)));
+  el.innerHTML=sorted.map((p,i)=>`
     <tr>
       <td><div class="player-name">${p.name}${i===0&&p.tries>0?'<span class="you-badge">TOP</span>':''}</div></td>
       <td>${p.matches||0}</td>
@@ -586,52 +639,46 @@ function renderStandings() {
 }
 
 function renderSidelineWatch() {
-  const tries = getTries(), tags = getTags();
-  setEl('watchTries', tries); setEl('watchTags', tags);
-  setEl('watchPlayers', state.players.length);
-  setEl('watchLabel', state.matchActive ? 'Live Match' : 'Ready');
-  const el = document.getElementById('sidelinePlayerList');
+  setEl('watchLabel', state.matchActive?'Live Match':'Ready');
+  const el=document.getElementById('sidelinePlayerList');
   if (el) {
-    const active = [...state.players].filter(p=>p.tries>0||p.tags>0).sort((a,b)=>(b.tries||0)-(a.tries||0));
-    el.innerHTML = active.length===0
-      ? '<div style="color:#444;font-size:.75rem;">No match data yet — go log some tries!</div>'
+    const active=[...state.players].filter(p=>p.tries>0||p.tags>0).sort((a,b)=>(b.tries||0)-(a.tries||0));
+    el.innerHTML=active.length===0
+      ? '<div style="color:#444;font-size:.75rem;">No match data yet</div>'
       : active.map(p=>`<div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid #111;font-family:var(--font-m);font-size:.75rem;"><span>${p.name}</span><span style="color:var(--green);">${p.tries||0}T ${p.tags||0}Tg</span></div>`).join('');
   }
 }
 
 function renderSeasonSummary() {
-  const allTries = state.players.reduce((s,p)=>s+(p.tries||0),0);
-  const allTags  = state.players.reduce((s,p)=>s+(p.tags||0),0);
-  setEl('seasonTries', allTries); setEl('seasonTags', allTags);
-  const barsEl = document.getElementById('seasonBars');
+  setEl('seasonTries',state.players.reduce((s,p)=>s+(p.tries||0),0));
+  setEl('seasonTags', state.players.reduce((s,p)=>s+(p.tags||0),0));
+  const barsEl=document.getElementById('seasonBars');
   if (barsEl) {
-    const maxTries = Math.max(...state.players.map(p=>p.tries||0),1);
-    const scorers  = state.players.filter(p=>p.tries>0);
-    barsEl.innerHTML = scorers.length===0
+    const max=Math.max(...state.players.map(p=>p.tries||0),1);
+    const scorers=state.players.filter(p=>p.tries>0);
+    barsEl.innerHTML=scorers.length===0
       ? '<div style="color:#444;font-size:.75rem;font-family:var(--font-m);">No tries logged yet</div>'
-      : scorers.map(p=>`
-        <div class="bar-row">
-          <div class="bar-label"><span>${p.name}</span><span>${p.tries||0} tries</span></div>
-          <div class="bar-track"><div class="bar-fill" style="width:${Math.round((p.tries||0)/maxTries*100)}%"></div></div>
-        </div>`).join('');
+      : scorers.map(p=>`<div class="bar-row"><div class="bar-label"><span>${p.name}</span><span>${p.tries||0} tries</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.round((p.tries||0)/max*100)}%"></div></div></div>`).join('');
   }
 }
 
+// ═══ INIT ═══
+async function init() {
+  renderAll(); updateTimerDisplay();
+  await Promise.all([loadMatchState(), loadPlayers(), loadNextMatch()]);
+  await loadMatchLog();
+  renderAll();
+}
 
-['nmDate','nmTime','nmVenue','nmOppo'].forEach((id,i) => {
-  const key = ['date','time','venue','oppo'][i];
-  const el = document.getElementById(id);
-  if (el && state.nextMatch[key]) el.value = state.nextMatch[key];
-});
-
-
-renderAll();
-updateTimerDisplay();
-
-
-loadPlayers();
+// ═══ BOOT — check if already logged in ═══
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session?.user) {
+    await onSignedIn(session.user);
+  }
+  // else auth screen stays visible
+})();
 
 </script>
 </body>
 </html>
-
