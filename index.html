@@ -21,8 +21,10 @@
   </ul>
 </nav>
 
+<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
+<!-- ADD PLAYER MODAL -->
 <div class="modal-overlay hidden" id="addPlayerModal">
   <div class="modal">
     <h3>ADD PLAYER</h3>
@@ -231,7 +233,7 @@
           <div class="match-detail-row"><span>Venue</span><input id="nmVenue" value="Field 3, North Oval" /></div>
           <div class="match-detail-row"><span>Opposition</span><input id="nmOppo" value="Thunder Taggers" /></div>
         </div>
-        <button class="btn btn-secondary btn-small" style="margin-top:1rem;width:100%;" onclick="saveNextMatch()">Save Details</button>
+        <button class="btn btn-secondary btn-small" style="margin-top:1rem;width:100%;" onclick="NextMatch()">Save Details</button>
       </div>
       <div class="hub-card">
         <h3>SEASON SUMMARY</h3>
@@ -250,14 +252,17 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 
+// Nuke any stale service worker caches immediately
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(r => r.unregister());
+  });
 }
 
 // ═══ SUPABASE ═══
 const supabaseUrl = "https://cfvvoseatrylzbrlckie.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmdnZvc2VhdHJ5bHpicmxja2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODEyMTIsImV4cCI6MjA5NTg1NzIxMn0.gJyH6YLWx8Z1Psgif09anY7I_bJQwTadyC4kPBAlA-k";
-const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
+const sbClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 // ═══ STATE ═══
 let state = {
@@ -273,42 +278,26 @@ let state = {
 };
 let timerInterval = null;
 
-// ═══ HELPERS ═══
+// ═══ SAFE HELPER — never crashes even if element missing ═══
 function setEl(id, val) {
   const e = document.getElementById(id);
   if (e) e.textContent = val;
 }
 
-function getTries()  { return state.players.reduce((s,p) => s+(p.tries||0), 0); }
-function getTags()   { return state.players.reduce((s,p) => s+(p.tags||0), 0); }
-function getTimeStr(){ 
-  const m = Math.floor(state.timerSeconds/60).toString().padStart(2,'0');
-  const s = (state.timerSeconds%60).toString().padStart(2,'0');
-  return m+':'+s;
-}
-
-let toastTimeout;
-function toast(msg) {
-  const el = document.getElementById('toast');
-  if (!el) return;
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => el.classList.remove('show'), 2200);
-}
-
-// ═══ NAVIGATION ═══
+// ═══ NAVIGATION — null-safe ═══
 function showPage(id) {
   try {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
     const page = document.getElementById(id);
-    const nav  = document.getElementById('nav-'+id);
+    const nav  = document.getElementById('nav-' + id);
     if (page) page.classList.add('active');
     if (nav)  nav.classList.add('active');
-    window.scrollTo(0,0);
+    window.scrollTo(0, 0);
     renderAll();
-  } catch(e) { console.error('showPage:', e); }
+  } catch(e) {
+    console.error('showPage error:', e);
+  }
 }
 
 // ═══ TIMER ═══
@@ -337,22 +326,12 @@ function resetTimer() {
   updateTimerDisplay();
 }
 
-async function resetMatch() {
+function resetMatch() {
   if (!confirm('Start a new match? This will save current stats to season totals and reset the log.')) return;
   clearInterval(timerInterval);
-  // increment match count for players who participated
-  const updates = [];
-  state.players.forEach(p => {
-    if (p.tries > 0 || p.tags > 0) {
-      p.matches = (p.matches || 0) + 1;
-      updates.push(sb.from('players').update({ matches: p.matches }).eq('id', p.id));
-    }
-  });
-  await Promise.all(updates);
-  // clear match log in DB
-  await sb.from('match_log').delete().neq('id', 0);
-  state.matchLog = [];
+  state.players.forEach(p => { if (p.tries > 0 || p.tags > 0) p.matches = (p.matches || 0) + 1; });
   state.matchCount++;
+  state.matchLog = [];
   state.timerRunning = false;
   state.timerSeconds = 0;
   state.matchActive = false;
@@ -368,10 +347,12 @@ async function resetMatch() {
 }
 
 function updateTimerDisplay() {
-  const str = getTimeStr();
+  const m = Math.floor(state.timerSeconds / 60).toString().padStart(2, '0');
+  const s = (state.timerSeconds % 60).toString().padStart(2, '0');
+  const str = m + ':' + s;
   setEl('matchTimer', str);
   setEl('watchTime', str);
-  setEl('heroGameLabel', state.matchActive ? 'Live · '+str : 'Ready');
+  setEl('heroGameLabel', state.matchActive ? 'Live · ' + str : 'Ready');
 }
 
 // ═══ PLAYERS ═══
@@ -389,13 +370,13 @@ async function addPlayer(name) {
   if (state.players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
     toast('Player already in squad!'); return;
   }
-  const { error } = await sb.from('players').insert([{ name, tries: 0, tags: 0, matches: 0 }]);
+  const { error } = await sbClient.from('players').insert([{ name, tries: 0, tags: 0, matches: 0 }]);
   if (error) { console.error('addPlayer:', error); toast('Error adding player'); return; }
   await loadPlayers();
 }
 
 async function loadPlayers() {
-  const { data, error } = await sb.from('players').select('*').order('id', { ascending: true });
+  const { data, error } = await sbClient.from('players').select('*').order('id', { ascending: true });
   if (error) { console.error('loadPlayers:', error); toast('Failed to load players'); return; }
   state.players = data || [];
   renderAll();
@@ -403,7 +384,7 @@ async function loadPlayers() {
 
 async function removePlayer(id) {
   id = Number(id);
-  const { error } = await sb.from('players').delete().eq('id', id);
+  const { error } = await sbClient.from('players').delete().eq('id', id);
   if (error) { console.error('removePlayer:', error); toast('Error removing player'); return; }
   if (state.selectedPlayer === id) {
     state.selectedPlayer = null;
@@ -440,35 +421,16 @@ async function logAction(action) {
   if (!state.selectedPlayer) return;
   const player = state.players.find(p => p.id === state.selectedPlayer);
   if (!player) return;
-  const timeStr = getTimeStr();
-  const entry = { time: timeStr, player_name: player.name, player_id: player.id, action };
-
-  // Save to Supabase match_log
-  const { data: inserted, error: logErr } = await sb.from('match_log').insert([entry]).select().single();
-  if (logErr) { console.error('logAction insert:', logErr); toast('Error saving log entry'); return; }
-
-  state.matchLog.unshift({ id: inserted.id, time: timeStr, player: player.name, playerId: player.id, action });
-
+  const m = Math.floor(state.timerSeconds / 60).toString().padStart(2, '0');
+  const s = (state.timerSeconds % 60).toString().padStart(2, '0');
+  state.matchLog.unshift({ id: Date.now(), time: m+':'+s, player: player.name, playerId: player.id, action });
   if (action === 'try') player.tries++;
   if (action === 'tag') player.tags++;
-  const { error } = await sb.from('players').update({ tries: player.tries, tags: player.tags }).eq('id', player.id);
-  if (error) console.error('logAction update player:', error);
-
+  const { error } = await sbClient.from('players').update({ tries: player.tries, tags: player.tags }).eq('id', player.id);
+  if (error) console.error('logAction save:', error);
   updateScoreDisplay();
   renderAll();
   toast(player.name + ': ' + (action === 'try' ? 'Try scored! 🏉' : 'Tag logged!'));
-}
-
-async function loadMatchLog() {
-  const { data, error } = await sb.from('match_log').select('*').order('id', { ascending: false });
-  if (error) { console.error('loadMatchLog:', error); return; }
-  state.matchLog = (data || []).map(e => ({
-    id: e.id,
-    time: e.time,
-    player: e.player_name,
-    playerId: e.player_id,
-    action: e.action
-  }));
 }
 
 async function deleteLogEntry(id) {
@@ -479,40 +441,24 @@ async function deleteLogEntry(id) {
   if (player) {
     if (entry.action === 'try' && player.tries > 0) player.tries--;
     if (entry.action === 'tag' && player.tags > 0) player.tags--;
-    await sb.from('players').update({ tries: player.tries, tags: player.tags }).eq('id', player.id);
+    await sbClient.from('players').update({ tries: player.tries, tags: player.tags }).eq('id', player.id);
   }
-  await sb.from('match_log').delete().eq('id', id);
   state.matchLog = state.matchLog.filter(e => e.id !== id);
   updateScoreDisplay();
   renderAll();
 }
 
-// ═══ NEXT MATCH ═══
-async function saveNextMatch() {
+// ═══ TEAM HUB ═══
+function NextMatch() {
   state.nextMatch = {
     date:  document.getElementById('nmDate')  ? document.getElementById('nmDate').value  : '',
     time:  document.getElementById('nmTime')  ? document.getElementById('nmTime').value  : '',
     venue: document.getElementById('nmVenue') ? document.getElementById('nmVenue').value : '',
     oppo:  document.getElementById('nmOppo')  ? document.getElementById('nmOppo').value  : ''
   };
-  // Upsert a single row with id=1
-  const { error } = await sb.from('next_match').upsert([{ id: 1, ...state.nextMatch }]);
-  if (error) { console.error('saveNextMatch:', error); toast('Error saving match details'); return; }
   toast('Next match saved!');
 }
 
-async function loadNextMatch() {
-  const { data, error } = await sb.from('next_match').select('*').eq('id', 1).single();
-  if (error || !data) return; // table may be empty first time
-  state.nextMatch = { date: data.date, time: data.time, venue: data.venue, oppo: data.oppo };
-  const fields = { nmDate: 'date', nmTime: 'time', nmVenue: 'venue', nmOppo: 'oppo' };
-  Object.entries(fields).forEach(([elId, key]) => {
-    const el = document.getElementById(elId);
-    if (el && state.nextMatch[key]) el.value = state.nextMatch[key];
-  });
-}
-
-// ═══ OTHER ═══
 function shareStatusLink() {
   const text = 'Oztag IQ Live — Home ' + getTries() + ' – ' + (state.awayTries||0) + ' Away | Time: ' + getTimeStr();
   if (navigator.clipboard) navigator.clipboard.writeText(text);
@@ -520,12 +466,28 @@ function shareStatusLink() {
 }
 
 function changeAwayTries(delta) {
-  state.awayTries = Math.max(0, (state.awayTries||0) + delta);
+  state.awayTries = Math.max(0, (state.awayTries || 0) + delta);
   updateScoreDisplay();
   if (delta > 0) toast('Away try scored!');
 }
 
-// ═══ RENDER ═══
+// ═══ HELPERS ═══
+function getTries()  { return state.players.reduce((s,p) => s + (p.tries||0), 0); }
+function getTags()   { return state.players.reduce((s,p) => s + (p.tags||0),  0); }
+function getTimeStr(){ const m=Math.floor(state.timerSeconds/60).toString().padStart(2,'0'); const s=(state.timerSeconds%60).toString().padStart(2,'0'); return m+':'+s; }
+
+// ═══ TOAST ═══
+let toastTimeout;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ═══ RENDER — every function is null-safe ═══
 function renderAll() {
   try { renderRoster(); }        catch(e) { console.error('renderRoster:', e); }
   try { renderPlayerTapGrid(); } catch(e) { console.error('renderPlayerTapGrid:', e); }
@@ -578,12 +540,12 @@ function renderMatchLog() {
 
 function renderLiveStats() {
   const tries = getTries(), tags = getTags();
-  const activePlayers = state.players.filter(p => p.tries>0||p.tags>0).length;
+  const activePlayers = state.players.filter(p => p.tries > 0 || p.tags > 0).length;
   setEl('statTries', tries); setEl('statTags', tags);
   setEl('statPlayers', activePlayers); setEl('statEvents', state.matchLog.length);
   setEl('heroTries', tries); setEl('heroTags', tags); setEl('heroHome', tries);
   const sorted = [...state.players].sort((a,b) => (b.tries||0)-(a.tries||0));
-  setEl('heroTopScorer', sorted.length && sorted[0].tries > 0 ? sorted[0].name+' · '+sorted[0].tries+' tries' : '—');
+  setEl('heroTopScorer', sorted.length && sorted[0].tries > 0 ? sorted[0].name + ' · ' + sorted[0].tries + ' tries' : '—');
   const barsEl = document.getElementById('playerStatBars');
   if (barsEl) {
     const maxTries = Math.max(...state.players.map(p=>p.tries||0), 1);
@@ -599,10 +561,10 @@ function renderLiveStats() {
 }
 
 function updateScoreDisplay() {
-  const home = getTries(), away = state.awayTries||0;
-  setEl('scoreDisplay', 'Home '+home+' – '+away+' Away');
+  const home = getTries(), away = state.awayTries || 0;
+  setEl('scoreDisplay', 'Home ' + home + ' – ' + away + ' Away');
   setEl('homeScoreDisplay', home); setEl('awayScoreDisplay', away);
-  setEl('heroAway', away); setEl('watchScore', home+'–'+away);
+  setEl('heroAway', away); setEl('watchScore', home + '–' + away);
 }
 
 function renderStandings() {
@@ -655,16 +617,21 @@ function renderSeasonSummary() {
   }
 }
 
-// ═══ INIT ═══
-async function init() {
-  renderAll();
-  updateTimerDisplay();
-  await Promise.all([loadPlayers(), loadMatchLog(), loadNextMatch()]);
-  renderAll();
-}
 
-init();
+['nmDate','nmTime','nmVenue','nmOppo'].forEach((id,i) => {
+  const key = ['date','time','venue','oppo'][i];
+  const el = document.getElementById(id);
+  if (el && state.nextMatch[key]) el.value = state.nextMatch[key];
+});
+
+
+renderAll();
+updateTimerDisplay();
+
+
+loadPlayers();
 
 </script>
 </body>
 </html>
+
