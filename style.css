@@ -1,6 +1,6 @@
 :root {
   --black:#0a0a0a;--white:#f5f2ec;--green:#b8ff57;--green-dark:#8fd43a;
-  --grey:#1c1c1c;--grey2:#2a2a2a;--muted:#666;--accent:#ff5733;
+  --white:#e0d8d8;--white2:#ffffff;--muted:#d9d5d5;--accent:#ff5733;
   --font-d:'Bebas Neue',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'DM Mono',monospace;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
