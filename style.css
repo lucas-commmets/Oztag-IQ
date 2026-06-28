@@ -43,7 +43,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .score-team{font-size:.65rem;font-weight:600;color:#ffffff;}
 .score-num{font-family:var(--font-d);font-size:2rem;color:var(--green);letter-spacing:2px;}
 .phone-stats{margin-top:1rem;}
-.stat-row{display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid #2a2a2a;font-size:.6rem;color:#888;}
+.stat-row{display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid #2a2a2a;font-size:.6rem;color:#ffffff;}
 .stat-row span:last-child{color:var(--white);font-weight:500;}
 
 /* SECTION HEADERS */
