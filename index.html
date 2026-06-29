@@ -10,7 +10,8 @@
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#b8ff57">
 <style>
-  /* ── AUTH SCREEN ── */
+ 
+ /* Authenticator Screen styles */
   #authScreen {
     position: fixed; inset: 0; z-index: 9999;
     background: #0a0a0a;
@@ -72,7 +73,7 @@
 </head>
 <body>
 
-<!-- AUTH SCREEN -->
+// Authentacation Screen
 <div id="authScreen">
   <div class="auth-box">
     <div class="auth-logo">OZTAG IQ</div>
@@ -160,7 +161,7 @@
           <button class="action-btn tag" id="tagBtn" onclick="logAction('tag')" disabled>+ TAG</button>
         </div>
         <div class="match-log-scroll" id="matchLogScroll">
-          <div style="text-align:center;padding:2rem;color:#444;font-family:var(--font-m);font-size:.75rem;">No events yet — start the timer and log!</div>
+          <div style="text-align:center;padding:2rem;color:#f7f7f7;font-family:var(--font-m);font-size:.75rem;">No events yet — start the timer and log!</div>
         </div>
       </div>
       <div class="app-panel">
@@ -213,7 +214,7 @@
   <footer><span class="logo">OZTAG IQ</span><span>© 2025 Oztag IQ · For teams, by players</span></footer>
 </div>
 
-<!-- TEAM HUB -->
+//Team Hub
 <div id="teamhub" class="page">
   <div class="section-header">
     <div class="section-label">Team Hub</div>
@@ -264,12 +265,12 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
 }
 
-// ═══ SUPABASE ═══
+//Supabase setup
 const supabaseUrl  = "https://cfvvoseatrylzbrlckie.supabase.co";
 const supabaseKey  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmdnZvc2VhdHJ5bHpicmxja2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODEyMTIsImV4cCI6MjA5NTg1NzIxMn0.gJyH6YLWx8Z1Psgif09anY7I_bJQwTadyC4kPBAlA-k";
 const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-// ═══ STATE ═══
+//State
 let currentUser = null;
 let currentTeamName = '';
 let state = {
@@ -281,7 +282,7 @@ let state = {
 };
 let timerInterval = null;
 
-// ═══ HELPERS ═══
+//Utils
 function setEl(id, val) { const e = document.getElementById(id); if (e) e.textContent = val; }
 function getTries() { return state.players.reduce((s,p) => s+(p.tries||0), 0); }
 function getTags()  { return state.players.reduce((s,p) => s+(p.tags||0),  0); }
@@ -296,7 +297,7 @@ function toast(msg) {
 }
 function uid() { return currentUser ? currentUser.id : null; }
 
-// ═══ AUTH ═══
+//Authenticator 
 let authMode = 'login';
 
 function switchTab(mode) {
@@ -359,7 +360,7 @@ async function handleLogout() {
   document.getElementById('authSubmitBtn').disabled = false;
 }
 
-// ═══ NAVIGATION ═══
+//Nav Bar
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
@@ -368,7 +369,7 @@ function showPage(id) {
   window.scrollTo(0,0); renderAll();
 }
 
-// ═══ TIMER ═══
+//Timer
 function toggleTimer() {
   if (state.timerRunning) {
     clearInterval(timerInterval);
@@ -414,7 +415,7 @@ function updateTimerDisplay() {
   setEl('matchTimer',s); setEl('watchTime',s);
 }
 
-// ═══ PERSIST MATCH STATE (debounced) ═══
+// PERSIST MATCH STATE (debounced)
 let saveMatchTO = null;
 function scheduleMatchSave() { clearTimeout(saveMatchTO); saveMatchTO = setTimeout(persistMatchState, 2000); }
 async function persistMatchState() {
@@ -426,7 +427,7 @@ async function persistMatchState() {
   }).eq('id', state.currentMatchId);
 }
 
-// ═══ PLAYERS ═══
+//Players
 function quickAddPlayer() {
   const inp = document.getElementById('quickAddInput'); if (!inp) return;
   const name = inp.value.trim(); if (!name) return;
@@ -454,7 +455,7 @@ async function removePlayer(id) {
   state.players = state.players.filter(p=>p.id!==id); renderAll();
 }
 
-// ═══ MATCH LOGGING ═══
+// Match Logging 
 function selectPlayer(id) {
   id=Number(id);
   state.selectedPlayer = state.selectedPlayer===id ? null : id;
@@ -566,7 +567,7 @@ function renderAll() {
 function renderRoster() {
   const el = document.getElementById('rosterList'); if (!el) return;
   el.innerHTML = state.players.length===0
-    ? '<li style="padding:.75rem;color:#444;font-family:var(--font-m);font-size:.75rem;text-align:center;">No players yet — add your squad!</li>'
+    ? '<li style="padding:.75rem;color:#ffffff;font-family:var(--font-m);font-size:.75rem;text-align:center;">No players yet — add your squad!</li>'
     : state.players.map(p=>`
       <li class="roster-item">
         <span class="roster-name">${p.name}</span>
@@ -580,14 +581,14 @@ function renderRoster() {
 function renderPlayerTapGrid() {
   const el = document.getElementById('playerTapGrid'); if (!el) return;
   el.innerHTML = state.players.length===0
-    ? '<span style="font-family:var(--font-m);font-size:.75rem;color:#444;">Add players to your roster first</span>'
+    ? '<span style="font-family:var(--font-m);font-size:.75rem;color:#ffffff;">Add players to your roster first</span>'
     : state.players.map(p=>`<button class="player-tap ${state.selectedPlayer===p.id?'selected':''}" onclick="selectPlayer(${p.id})">${p.name}</button>`).join('');
 }
 
 function renderMatchLog() {
   const el = document.getElementById('matchLogScroll'); if (!el) return;
   el.innerHTML = state.matchLog.length===0
-    ? '<div style="text-align:center;padding:2rem;color:#444;font-family:var(--font-m);font-size:.75rem;">No events yet — start the timer and log!</div>'
+    ? '<div style="text-align:center;padding:2rem;color:#ffffff;font-family:var(--font-m);font-size:.75rem;">No events yet — start the timer and log!</div>'
     : state.matchLog.map(e=>`
       <div class="log-entry">
         <span class="log-time">${e.time}</span>
@@ -609,7 +610,7 @@ function renderLiveStats() {
     const max=Math.max(...state.players.map(p=>p.tries||0),1);
     const active=state.players.filter(p=>p.tries>0||p.tags>0);
     barsEl.innerHTML=active.length===0
-      ? '<div style="color:#444;font-size:.75rem;font-family:var(--font-m);">No stats yet</div>'
+      ? '<div style="color:#ffffff;font-size:.75rem;font-family:var(--font-m);">No stats yet</div>'
       : active.map(p=>`<div class="bar-row"><div class="bar-label"><span>${p.name}</span><span>${p.tries||0} tries · ${p.tags||0} tags</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.round((p.tries||0)/max*100)}%"></div></div></div>`).join('');
   }
 }
@@ -624,7 +625,7 @@ function updateScoreDisplay() {
 function renderStandings() {
   const el=document.getElementById('standingsBody'); if (!el) return;
   if (state.players.length===0) {
-    el.innerHTML='<tr><td colspan="5" style="text-align:center;padding:2rem;color:#444;font-family:var(--font-m);font-size:.75rem;">No players yet</td></tr>'; return;
+    el.innerHTML='<tr><td colspan="5" style="text-align:center;padding:2rem;color:#ffffff;font-family:var(--font-m);font-size:.75rem;">No players yet</td></tr>'; return;
   }
   const sorted=[...state.players].sort((a,b)=>((b.tries||0)*2+(b.tags||0))-((a.tries||0)*2+(a.tags||0)));
   const maxTries=Math.max(...state.players.map(x=>x.tries||0));
@@ -645,7 +646,7 @@ function renderSidelineWatch() {
   if (el) {
     const active=[...state.players].filter(p=>p.tries>0||p.tags>0).sort((a,b)=>(b.tries||0)-(a.tries||0));
     el.innerHTML=active.length===0
-      ? '<div style="color:#444;font-size:.75rem;">No match data yet</div>'
+      ? '<div style="color:#ffffff;font-size:.75rem;">No match data yet</div>'
       : active.map(p=>`<div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid #111;font-family:var(--font-m);font-size:.75rem;"><span>${p.name}</span><span style="color:var(--green);">${p.tries||0}T ${p.tags||0}Tg</span></div>`).join('');
   }
 }
@@ -658,7 +659,7 @@ function renderSeasonSummary() {
     const max=Math.max(...state.players.map(p=>p.tries||0),1);
     const scorers=state.players.filter(p=>p.tries>0);
     barsEl.innerHTML=scorers.length===0
-      ? '<div style="color:#444;font-size:.75rem;font-family:var(--font-m);">No tries logged yet</div>'
+      ? '<div style="color:#ffffff;font-size:.75rem;font-family:var(--font-m);">No tries logged yet</div>'
       : scorers.map(p=>`<div class="bar-row"><div class="bar-label"><span>${p.name}</span><span>${p.tries||0} tries</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.round((p.tries||0)/max*100)}%"></div></div></div>`).join('');
   }
 }
