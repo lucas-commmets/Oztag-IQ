@@ -277,6 +277,26 @@ if ('serviceWorker' in navigator) {
 const supabaseUrl  = "https://cfvvoseatrylzbrlckie.supabase.co";
 const supabaseKey  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmdnZvc2VhdHJ5bHpicmxja2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODEyMTIsImV4cCI6MjA5NTg1NzIxMn0.gJyH6YLWx8Z1Psgif09anY7I_bJQwTadyC4kPBAlA-k";
 const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
+  
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'PASSWORD_RECOVERY') {
+    // 1. The user arrived via the email link, open a browser pop-up prompt
+    const newPassword = prompt("Please enter your new password:");
+    
+    if (newPassword) {
+      // 2. Submit the new password to Supabase using your 'sb' client
+      const { data, error } = await sb.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        alert("Failed to update password: " + error.message);
+      } else {
+        alert("Password updated successfully! You can now log in with your new password.");
+      }
+    }
+  }
+});
 
 //State
 let currentUser = null;
